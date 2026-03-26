@@ -12,12 +12,12 @@ namespace PlanIt.Infrastructure.Authentication;
 public class RefreshTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimeProvider datetimeProvider)
     : IRefreshTokenGenerator
 {
-    private readonly JwtSettings jwtSettings = jwtOptions.Value;
+    private readonly JwtSettings _jwtSettings = jwtOptions.Value;
     public string GenerateRefreshToken(Guid userId, string email, UserRole role)
     {
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSettings.RefreshTokenSecret)
+                Encoding.UTF8.GetBytes(_jwtSettings.RefreshTokenSecret)
             ), SecurityAlgorithms.HmacSha256
         );
         
@@ -31,9 +31,9 @@ public class RefreshTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimePr
         };
 
         var refreshToken = new JwtSecurityToken(
-            issuer: jwtSettings.Issuer,
-            audience: jwtSettings.Audience,
-            expires: datetimeProvider.UtcNow.AddMinutes(jwtSettings.RefreshExpiryMinutes),
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
+            expires: datetimeProvider.UtcNow.AddMinutes(_jwtSettings.RefreshExpiryMinutes),
             claims: claims,
             signingCredentials: signingCredentials
         );

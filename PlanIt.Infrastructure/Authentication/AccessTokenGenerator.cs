@@ -12,12 +12,12 @@ namespace PlanIt.Infrastructure.Authentication;
 public class AccessTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimeProvider dateTimeProvider)
     : IAccessTokenGenerator
 {
-    private readonly JwtSettings jwtSettings = jwtOptions.Value;
+    private readonly JwtSettings _jwtSettings = jwtOptions.Value;
     public string GenerateAccessToken(Guid userId, string email, UserRole role)
     {
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtSettings.AccessTokenSecret)
+                Encoding.UTF8.GetBytes(_jwtSettings.AccessTokenSecret)
             ), SecurityAlgorithms.HmacSha256);
         
         var claims = new[]
@@ -32,10 +32,10 @@ public class AccessTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimePro
         };
         
         var accessToken = new JwtSecurityToken(
-            jwtSettings.Issuer,
-            jwtSettings.Audience,
+            _jwtSettings.Issuer,
+            _jwtSettings.Audience,
             claims,
-            expires: dateTimeProvider.UtcNow.AddMinutes(jwtSettings.AccessExpiryMinutes),
+            expires: dateTimeProvider.UtcNow.AddMinutes(_jwtSettings.AccessExpiryMinutes),
             signingCredentials: signingCredentials
         );
         
