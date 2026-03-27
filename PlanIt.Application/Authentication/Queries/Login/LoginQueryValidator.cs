@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace PlanIt.Application.Authentication.Queries;
+namespace PlanIt.Application.Authentication.Queries.Login;
 
 public class LoginQueryValidator : AbstractValidator<LoginQuery>
 {

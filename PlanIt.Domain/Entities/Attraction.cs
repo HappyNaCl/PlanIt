@@ -4,10 +4,7 @@ namespace PlanIt.Domain.Entities;
 
 public class Attraction : Entity<Guid>
 {
-    public Attraction() : base(Guid.NewGuid())
-    {
-        
-    }
+    public Attraction() : base(Guid.NewGuid()) { }
     
     public Attraction(Guid id, string name, string description, string imageUrl, int capacity, Guid scheduleId)
         : base(id)

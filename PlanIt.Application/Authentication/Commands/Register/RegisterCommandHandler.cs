@@ -3,10 +3,9 @@ using PlanIt.Application.Authentication.Results;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Persistence;
 using PlanIt.Domain.Common.Enums;
-using PlanIt.Domain.Common.Exceptions.Users;
 using PlanIt.Domain.Entities;
 
-namespace PlanIt.Application.Authentication.Commands;
+namespace PlanIt.Application.Authentication.Commands.Register;
 
 public class RegisterCommandHandler (
         IAccessTokenGenerator accessTokenGenerator,
@@ -32,7 +31,7 @@ public class RegisterCommandHandler (
         var accessToken = accessTokenGenerator.GenerateAccessToken(
             savedUser.Id, savedUser.Email, savedUser.Role);
         var refreshToken = refreshTokenGenerator.GenerateRefreshToken(
-            savedUser.Id, savedUser.Email, savedUser.Role);
+            savedUser.Id);
 
         return new AuthenticationResult
         (

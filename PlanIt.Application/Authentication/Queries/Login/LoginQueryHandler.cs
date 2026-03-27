@@ -4,7 +4,7 @@ using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Persistence;
 using PlanIt.Domain.Common.Exceptions.Users;
 
-namespace PlanIt.Application.Authentication.Queries;
+namespace PlanIt.Application.Authentication.Queries.Login;
 
 public class LoginQueryHandler(
     IAccessTokenGenerator accessTokenGenerator,
@@ -23,7 +23,7 @@ public class LoginQueryHandler(
         var accessToken = accessTokenGenerator.GenerateAccessToken(
             user.Id, user.Email, user.Role);
         var refreshToken = refreshTokenGenerator.GenerateRefreshToken(
-            user.Id, user.Email, user.Role);
+            user.Id);
 
         return new AuthenticationResult
         (

@@ -2,7 +2,9 @@ using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using PlanIt.Application.Authentication.Commands;
+using PlanIt.Application.Authentication.Commands.Register;
 using PlanIt.Application.Authentication.Queries;
+using PlanIt.Application.Authentication.Queries.Login;
 using PlanIt.Contracts.Authentication;
 
 namespace PlanIt.Api.Controllers;

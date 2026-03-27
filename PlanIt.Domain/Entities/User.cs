@@ -5,9 +5,7 @@ namespace PlanIt.Domain.Entities;
 
 public class User : Entity<Guid>
 {
-    public User() : base(Guid.NewGuid())
-    {
-    }
+    public User() : base(Guid.NewGuid()) { }
 
     public User(Guid id, string username, string email, string password, UserRole role = UserRole.USER)
         : base(id)

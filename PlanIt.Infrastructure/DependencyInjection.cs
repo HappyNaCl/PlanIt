@@ -1,12 +1,14 @@
 using Amazon.Runtime;
 using Amazon.S3;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Datetime;
 using PlanIt.Application.Common.Interfaces.Persistence;
 using PlanIt.Infrastructure.Authentication;
+using PlanIt.Infrastructure.CachedPersistence;
 using PlanIt.Infrastructure.Datetime;
 using PlanIt.Infrastructure.FileUploader;
 using PlanIt.Infrastructure.Persistence;
@@ -22,9 +24,18 @@ public static class DependencyInjection
             opt.UseNpgsql(config.GetConnectionString("DefaultConnection")));
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<ApplicationDbContext>());
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
+        
+        services.AddStackExchangeRedisCache(options =>
+            options.Configuration = config.GetConnectionString("Redis"));
 
+        services.AddScoped<UserRepository>();
+        services.AddScoped<IUserRepository>(sp =>
+            new CachedUserRepository(
+                sp.GetRequiredService<UserRepository>(),
+                sp.GetRequiredService<IDistributedCache>()
+            ));
+        
+        services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<IAccessTokenGenerator, AccessTokenGenerator>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
         

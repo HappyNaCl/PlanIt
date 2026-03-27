@@ -4,5 +4,7 @@ namespace PlanIt.Application.Common.Interfaces.Authentication;
 
 public interface IRefreshTokenGenerator
 {
-    public string GenerateRefreshToken(Guid userId, string email, UserRole role);
+    public string GenerateRefreshToken(Guid userId);
+    
+    public Guid ValidateRefreshToken(string token);
 }

@@ -33,16 +33,20 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
         return user;
     }
 
-    public async Task<User> GetUser(Guid id)
+    public async Task<User> GetUserById(Guid id)
     {
-        var user = await context.Users.FirstAsync(u => u.Id == id);
+        var user = await context.Users
+            .AsNoTracking()
+            .FirstAsync(u => u.Id == id);
 
         return user ?? throw new UserNotFoundException(id.ToString());
     }
 
     public async Task<User> GetUserByUsername(string username)
     {
-        var user = await context.Users.FirstAsync(u => u.Username == username);
+        var user = await context.Users
+            .AsNoTracking()
+            .FirstAsync(u => u.Username == username);
 
         return user ?? throw new UserNotFoundException(username);
     }

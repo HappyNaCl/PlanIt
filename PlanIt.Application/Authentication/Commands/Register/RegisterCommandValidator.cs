@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace PlanIt.Application.Authentication.Commands;
+namespace PlanIt.Application.Authentication.Commands.Register;
 
 public class RegisterCommandValidator : AbstractValidator<RegisterCommand>
 {

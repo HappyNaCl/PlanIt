@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Datetime;
 using PlanIt.Domain.Common.Enums;
+using PlanIt.Domain.Common.Exceptions.Authentication;
 
 namespace PlanIt.Infrastructure.Authentication;
 
@@ -40,5 +41,32 @@ public class AccessTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimePro
         );
         
         return new JwtSecurityTokenHandler().WriteToken(accessToken);
+    }
+
+    public Guid ValidateAccessToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_jwtSettings.AccessTokenSecret);
+
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = _jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _jwtSettings.Audience,
+            ValidateLifetime = true,
+        };
+        
+        var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+        if (validatedToken is not JwtSecurityToken jwtToken ||
+            !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            throw new InvalidAccessTokenException();
+       
+        var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : throw new InvalidAccessTokenException();
     }
 }

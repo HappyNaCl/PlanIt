@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Datetime;
 using PlanIt.Domain.Common.Enums;
+using PlanIt.Domain.Common.Exceptions.Authentication;
 
 namespace PlanIt.Infrastructure.Authentication;
 
@@ -13,7 +14,7 @@ public class RefreshTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimePr
     : IRefreshTokenGenerator
 {
     private readonly JwtSettings _jwtSettings = jwtOptions.Value;
-    public string GenerateRefreshToken(Guid userId, string email, UserRole role)
+    public string GenerateRefreshToken(Guid userId)
     {
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(
@@ -39,5 +40,32 @@ public class RefreshTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimePr
         );
         
         return new JwtSecurityTokenHandler().WriteToken(refreshToken);
+    }
+
+    public Guid ValidateRefreshToken(string token)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_jwtSettings.RefreshTokenSecret);
+
+        var validationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = _jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _jwtSettings.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero 
+        };
+    
+        var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+
+        if (validatedToken is not JwtSecurityToken jwtToken ||
+            !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            throw new InvalidRefreshTokenException();
+        
+        var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : throw new InvalidRefreshTokenException();
     }
 }
