@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using PlanIt.Api;
+using PlanIt.Api.Middlewares;
 using PlanIt.Application;
 using PlanIt.Infrastructure;
 
@@ -10,7 +13,13 @@ var builder = WebApplication.CreateBuilder(args);
     
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .ConfigureApiBehaviorOptions(options =>
+            options.SuppressModelStateInvalidFilter = true)
+        .AddJsonOptions(options =>
+            options.JsonSerializerOptions.DefaultIgnoreCondition =
+                JsonIgnoreCondition.WhenWritingNull);
+    builder.Services.AddMappings();
 }
 
 var app = builder.Build();
@@ -21,8 +30,12 @@ var app = builder.Build();
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+    
+    // Middlewares
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     app.UseHttpsRedirection();
     app.MapControllers();
     app.Run();
+    
 }

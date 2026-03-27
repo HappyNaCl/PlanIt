@@ -1,9 +1,9 @@
-namespace PlanIt.Contracts.Authentication;
+namespace PlanIt.Application.Authentication.Results;
 
-public record AuthenticationResponse(
+public record AuthenticationResult(
     Guid UserId,
     string Username,
     string Email,
     string AccessToken,
     string RefreshToken
-    );
+);

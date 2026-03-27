@@ -22,6 +22,8 @@ public static class DependencyInjection
             opt.UseNpgsql(config.GetConnectionString("DefaultConnection")));
         services.AddScoped<IApplicationDbContext>(sp =>
             sp.GetRequiredService<ApplicationDbContext>());
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
 
         services.AddScoped<IAccessTokenGenerator, AccessTokenGenerator>();
         services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
