@@ -17,9 +17,9 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
 
     private string RedisKey(Guid id) => $"user:id:{id}";
     
-    public async Task<User> CreateUser(User user)
+    public async Task<User> Create(User user)
     {
-        var savedUser = await inner.CreateUser(user);
+        var savedUser = await inner.Create(user);
         
         var cacheKey = RedisKey(savedUser.Id);
         await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(user, _json), _options);
@@ -27,21 +27,26 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
         return user;
     }
 
-    public async Task<User> GetUserById(Guid id)
+    public async Task<User> GetById(Guid id)
     {
         var cached = await cache.GetStringAsync(RedisKey(id));
 
-        if (cached == null) return await inner.GetUserById(id);
+        if (cached == null) return await inner.GetById(id);
         
         var deserialized = JsonSerializer.Deserialize<User>(cached, _json);
         if (deserialized is not null)
             return deserialized;
 
-        return await inner.GetUserById(id);
+        return await inner.GetById(id);
     }
 
-    public async Task<User> GetUserByUsername(string username)
+    public async Task<User> GetByUsername(string username)
     {
-        return await inner.GetUserByUsername(username);
+        return await inner.GetByUsername(username);
+    }
+
+    public async Task<User?> GetByUsernameDefault(string username)
+    {
+        return await inner.GetByUsernameDefault(username);
     }
 }

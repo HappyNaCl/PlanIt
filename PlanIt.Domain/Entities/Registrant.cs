@@ -12,9 +12,9 @@ public class Registrant : AggregateRoot<Guid>
         AttractionId = attractionId;
     }
     
-    public required Guid UserId { get; init; }
-    public required Guid AttractionId { get; init; }
+    public Guid UserId { get; init; }
+    public Guid AttractionId { get; init; }
 
-    public User User { get; set; } = null!;
-    public Attraction Attraction { get; set; } = null!;
+    public User User { get; private set; } = null!;
+    public Attraction Attraction { get; private set; } = null!;
 }

@@ -14,9 +14,9 @@ public class Schedule : Entity<Guid>
         EndTime = endTime;
     }
     
-    public required string Name { get; init; }
-    public required DateTime StartTime { get; init; }
-    public required DateTime EndTime { get; init; }
+    public string Name { get; init; }
+    public DateTime StartTime { get; init; }
+    public DateTime EndTime { get; init; }
 
-    public ICollection<Attraction> Attractions { get; init; } = new List<Attraction>();
+    public ICollection<Attraction> Attractions { get; private set; } = new List<Attraction>();
 }

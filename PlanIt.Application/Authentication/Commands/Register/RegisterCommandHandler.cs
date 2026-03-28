@@ -26,11 +26,11 @@ public class RegisterCommandHandler (
             Role = UserRole.USER
         };
 
-        var savedUser = await userRepository.CreateUser(newUser);
+        var savedUser = await userRepository.Create(newUser);
 
         var accessToken = accessTokenGenerator.GenerateAccessToken(
             savedUser.Id, savedUser.Email, savedUser.Role);
-        var refreshToken = refreshTokenGenerator.GenerateRefreshToken(
+        var refreshToken = await refreshTokenGenerator.GenerateRefreshToken(
             savedUser.Id);
 
         return new AuthenticationResult
@@ -39,7 +39,7 @@ public class RegisterCommandHandler (
             savedUser.Username,
             savedUser.Email,
             accessToken,
-            refreshToken
+            refreshToken.Token
         );
     }
 }

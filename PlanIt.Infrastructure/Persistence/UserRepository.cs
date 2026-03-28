@@ -8,7 +8,7 @@ namespace PlanIt.Infrastructure.Persistence;
 
 public class UserRepository(IApplicationDbContext context) : IUserRepository
 {
-    public async Task<User> CreateUser(User user)
+    public async Task<User> Create(User user)
     {
         context.Users.Add(user);
 
@@ -33,21 +33,30 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
         return user;
     }
 
-    public async Task<User> GetUserById(Guid id)
+    public async Task<User> GetById(Guid id)
     {
         var user = await context.Users
             .AsNoTracking()
-            .FirstAsync(u => u.Id == id);
+            .FirstOrDefaultAsync(u => u.Id == id);
 
         return user ?? throw new UserNotFoundException(id.ToString());
     }
 
-    public async Task<User> GetUserByUsername(string username)
+    public async Task<User> GetByUsername(string username)
     {
         var user = await context.Users
             .AsNoTracking()
-            .FirstAsync(u => u.Username == username);
+            .FirstOrDefaultAsync(u => u.Username == username);
 
         return user ?? throw new UserNotFoundException(username);
+    }
+
+    public async Task<User?> GetByUsernameDefault(string username)
+    {
+        var user = await context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Username == username);
+
+        return user;
     }
 }

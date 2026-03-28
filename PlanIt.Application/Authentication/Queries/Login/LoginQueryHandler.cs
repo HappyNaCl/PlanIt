@@ -15,14 +15,14 @@ public class LoginQueryHandler(
 {
     public async Task<AuthenticationResult> Handle(LoginQuery request, CancellationToken cancellationToken)
     {
-        var user = await userRepository.GetUserByUsername(request.Username);
+        var user = await userRepository.GetByUsernameDefault(request.Username);
 
-        if (!passwordHasher.Validate(request.Password, user.Password))
+        if (user is null || !passwordHasher.Validate(request.Password, user.Password))
             throw new UserInvalidCredentialException();
-        
+
         var accessToken = accessTokenGenerator.GenerateAccessToken(
             user.Id, user.Email, user.Role);
-        var refreshToken = refreshTokenGenerator.GenerateRefreshToken(
+        var refreshToken = await refreshTokenGenerator.GenerateRefreshToken(
             user.Id);
 
         return new AuthenticationResult
@@ -31,7 +31,7 @@ public class LoginQueryHandler(
             user.Username,
             user.Email,
             accessToken,
-            refreshToken
+            refreshToken.Token
         );
     }
 }

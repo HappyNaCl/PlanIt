@@ -1,10 +1,8 @@
-using PlanIt.Domain.Common.Enums;
+using PlanIt.Domain.Entities;
 
 namespace PlanIt.Application.Common.Interfaces.Authentication;
 
 public interface IRefreshTokenGenerator
 {
-    public string GenerateRefreshToken(Guid userId);
-    
-    public Guid ValidateRefreshToken(string token);
+    Task<RefreshToken> GenerateRefreshToken(Guid userId);
 }

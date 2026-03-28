@@ -10,62 +10,63 @@ using PlanIt.Domain.Common.Exceptions.Authentication;
 
 namespace PlanIt.Infrastructure.Authentication;
 
-public class RefreshTokenGenerator(IOptions<JwtSettings> jwtOptions, IDatetimeProvider datetimeProvider)
-    : IRefreshTokenGenerator
+public class AccessTokenService(IOptions<TokenSettings> tokenOptions, IDatetimeProvider dateTimeProvider)
+    : IAccessTokenGenerator, IAccessTokenValidator
 {
-    private readonly JwtSettings _jwtSettings = jwtOptions.Value;
-    public string GenerateRefreshToken(Guid userId)
+    private readonly TokenSettings _tokenSettings = tokenOptions.Value;
+    public string GenerateAccessToken(Guid userId, string email, UserRole role)
     {
         var signingCredentials = new SigningCredentials(
             new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_jwtSettings.RefreshTokenSecret)
-            ), SecurityAlgorithms.HmacSha256
-        );
+                Encoding.UTF8.GetBytes(_tokenSettings.AccessTokenSecret)
+            ), SecurityAlgorithms.HmacSha256);
         
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Iat, 
-                new DateTimeOffset(datetimeProvider.UtcNow).ToUnixTimeSeconds().ToString(),
+                new DateTimeOffset(dateTimeProvider.UtcNow).ToUnixTimeSeconds().ToString(),
                 ClaimValueTypes.Integer64),
+            new Claim("Role", role.ToString())
         };
-
-        var refreshToken = new JwtSecurityToken(
-            issuer: _jwtSettings.Issuer,
-            audience: _jwtSettings.Audience,
-            expires: datetimeProvider.UtcNow.AddMinutes(_jwtSettings.RefreshExpiryMinutes),
-            claims: claims,
+        
+        var accessToken = new JwtSecurityToken(
+            _tokenSettings.Issuer,
+            _tokenSettings.Audience,
+            claims,
+            expires: dateTimeProvider.UtcNow.AddMinutes(_tokenSettings.AccessExpiryMinutes),
             signingCredentials: signingCredentials
         );
         
-        return new JwtSecurityTokenHandler().WriteToken(refreshToken);
+        return new JwtSecurityTokenHandler().WriteToken(accessToken);
     }
 
-    public Guid ValidateRefreshToken(string token)
+    public Guid ValidateAccessToken(string token)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_jwtSettings.RefreshTokenSecret);
+        var key = Encoding.UTF8.GetBytes(_tokenSettings.AccessTokenSecret);
 
         var validationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ValidateIssuer = true,
-            ValidIssuer = _jwtSettings.Issuer,
+            ValidIssuer = _tokenSettings.Issuer,
             ValidateAudience = true,
-            ValidAudience = _jwtSettings.Audience,
+            ValidAudience = _tokenSettings.Audience,
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.Zero 
         };
-    
+        
         var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
 
         if (validatedToken is not JwtSecurityToken jwtToken ||
             !jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-            throw new InvalidRefreshTokenException();
-        
+            throw new InvalidAccessTokenException();
+       
         var userIdClaim = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-        return Guid.TryParse(userIdClaim, out var userId) ? userId : throw new InvalidRefreshTokenException();
+        
+        return Guid.TryParse(userIdClaim, out var userId) ? userId : throw new InvalidAccessTokenException();
     }
 }

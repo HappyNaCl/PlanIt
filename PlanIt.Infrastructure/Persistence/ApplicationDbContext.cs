@@ -20,6 +20,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Attraction> Attractions => Set<Attraction>();
     
     public DbSet<Registrant> Registrants =>  Set<Registrant>();
+
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -77,6 +79,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.AttractionId);
         });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.Token);
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.IsUsed).IsRequired();
+            entity.Property(e => e.ExpiresAt).IsRequired();
+        });
         
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
@@ -112,6 +124,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         // domainEntities.ForEach(e => e.Entity.ClearDomainEvents());
         //
         // return result;
+        
         return await base.SaveChangesAsync(cancellationToken);
     }
 

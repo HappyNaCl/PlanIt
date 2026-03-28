@@ -16,10 +16,10 @@ public class User : Entity<Guid>
         Role = role;
     }
     
-    public required string Username { get; init; }
-    public required string Email { get; init; } 
-    public required string Password { get; init; }
-    public required UserRole Role { get; init; } = UserRole.USER;
+    public string Username { get; init; }
+    public string Email { get; init; } 
+    public string Password { get; init; }
+    public UserRole Role { get; init; } = UserRole.USER;
     
-    public ICollection<Registrant> RegisteredAttractions { get; init; } = new List<Registrant>();
+    public ICollection<Registrant> RegisteredAttractions { get; private set; } = new List<Registrant>();
 }

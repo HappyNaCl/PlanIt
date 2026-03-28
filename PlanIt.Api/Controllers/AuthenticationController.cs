@@ -1,9 +1,8 @@
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using PlanIt.Application.Authentication.Commands;
+using PlanIt.Application.Authentication.Commands.RefreshToken;
 using PlanIt.Application.Authentication.Commands.Register;
-using PlanIt.Application.Authentication.Queries;
 using PlanIt.Application.Authentication.Queries.Login;
 using PlanIt.Contracts.Authentication;
 
@@ -30,9 +29,19 @@ public class AuthenticationController(
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var command = mapper.Map<LoginQuery>(request);
-        
+
         var loginResult = await mediator.Send(command);
-        
+
         return Ok(mapper.Map<AuthenticationResponse>(loginResult));
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh(RefreshTokenRequest request)
+    {
+        var command = mapper.Map<RefreshTokenCommand>(request);
+
+        var result = await mediator.Send(command);
+
+        return Ok(mapper.Map<RefreshTokenResponse>(result));
     }
 }

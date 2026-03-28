@@ -4,7 +4,8 @@ namespace PlanIt.Application.Common.Interfaces.Persistence;
 
 public interface IUserRepository
 {
-    public Task<User> CreateUser(User user);
-    public Task<User> GetUserById(Guid id);
-    public Task<User> GetUserByUsername(string username);
+    public Task<User> Create(User user);
+    public Task<User> GetById(Guid id);
+    public Task<User> GetByUsername(string username);
+    public Task<User?> GetByUsernameDefault(string username);
 }

@@ -35,13 +35,19 @@ public static class DependencyInjection
                 sp.GetRequiredService<IDistributedCache>()
             ));
         
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
-        services.AddScoped<IAccessTokenGenerator, AccessTokenGenerator>();
-        services.AddScoped<IRefreshTokenGenerator, RefreshTokenGenerator>();
+        services.AddScoped<AccessTokenService>();
+        services.AddScoped<IAccessTokenGenerator>(sp => sp.GetRequiredService<AccessTokenService>());
+        services.AddScoped<IAccessTokenValidator>(sp => sp.GetRequiredService<AccessTokenService>());
+        services.AddScoped<RefreshTokenService>();
+        services.AddScoped<IRefreshTokenGenerator>(sp => sp.GetRequiredService<RefreshTokenService>());
+        services.AddScoped<IRefreshTokenValidator>(sp => sp.GetRequiredService<RefreshTokenService>());
         
         services.AddSingleton<IDatetimeProvider, DatetimeProvider>();
         
-        services.Configure<JwtSettings>(config.GetSection(JwtSettings.SectionName));
+        services.Configure<TokenSettings>(config.GetSection(TokenSettings.SectionName));
         
         services.AddSingleton<IAmazonS3>(_ =>
             {
