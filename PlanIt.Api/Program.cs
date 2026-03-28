@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using PlanIt.Api;
+using PlanIt.Api.Filters;
 using PlanIt.Api.Middlewares;
 using PlanIt.Application;
 using PlanIt.Infrastructure;
@@ -13,7 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
     
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
-    builder.Services.AddControllers()
+    builder.Services.AddControllers(options =>
+            options.Filters.Add<WrapResponseFilter>())
         .ConfigureApiBehaviorOptions(options =>
             options.SuppressModelStateInvalidFilter = true)
         .AddJsonOptions(options =>
