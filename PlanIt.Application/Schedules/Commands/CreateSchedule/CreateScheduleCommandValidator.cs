@@ -12,7 +12,7 @@ public class CreateScheduleCommandValidator : AbstractValidator<CreateScheduleCo
             .NotEmpty().WithMessage("Location is required.");
         RuleFor(x => x.StartTime)
             .NotEmpty().WithMessage("Start time is required.")
-            .GreaterThan(DateTime.Now).WithMessage("Schedule must be in the future.")
+            .GreaterThan(DateTime.UtcNow).WithMessage("Schedule must be in the future.")
             .LessThan(x => x.EndTime).WithMessage("Start time must be before end time.");
         RuleFor(x => x.EndTime)
             .NotEmpty().WithMessage("End time is required.")

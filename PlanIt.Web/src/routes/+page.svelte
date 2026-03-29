@@ -3,7 +3,7 @@
 	import { browser } from '$app/environment';
 	import { isAuthenticated, isInitialized, getAuth } from '$lib/stores/auth.svelte';
 	import { resolve } from '$app/paths';
-	import { Query } from '@sveltestack/svelte-query';
+	import { Query, useQueryClient } from '@sveltestack/svelte-query';
 	import { api } from '$lib/services/api';
 	import type { Schedule } from '$lib/types/models/schedule';
 	import Navbar from '$lib/components/Navbar.svelte';
@@ -52,6 +52,8 @@
 
 	const isAdmin = $derived(getAuth().user?.role === 'ADMIN');
 
+	const queryClient = useQueryClient();
+
 	// Create schedule modal
 	let createOpen = $state(false);
 	let form = $state({ name: '', description: '', location: '', startTime: '', endTime: '' });
@@ -81,6 +83,7 @@
 			});
 			toast.success('Expedition charted successfully');
 			createOpen = false;
+			queryClient.invalidateQueries(['schedules', date]);
 		} catch (error) {
 			toast.error(`Failed to chart expedition: ${error}`);
 		} finally {
