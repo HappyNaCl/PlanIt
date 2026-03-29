@@ -30,9 +30,9 @@ public class ScheduleController(
 
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> GetSchedulesByDate([FromQuery] DateOnly? date)
+    public async Task<IActionResult> GetSchedulesByDate([FromQuery] DateOnly? date, [FromQuery] int utcOffsetMinutes = 0)
     {
-        var query = new GetSchedulesByDateQuery(date ?? DateOnly.FromDateTime(DateTime.Now));
+        var query = new GetSchedulesByDateQuery(date ?? DateOnly.FromDateTime(DateTime.UtcNow), utcOffsetMinutes);
 
         var results = await mediator.Send(query);
 

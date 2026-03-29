@@ -10,7 +10,11 @@ public class GetSchedulesByDateQueryHandler(
 {
     public async Task<List<ScheduleResult>> Handle(GetSchedulesByDateQuery request, CancellationToken cancellationToken)
     {
-        var schedules = await scheduleRepository.GetByDate(request.Date);
+        var offset = TimeSpan.FromMinutes(request.UtcOffsetMinutes);
+        var startUtc = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MinValue) - offset, DateTimeKind.Utc);
+        var endUtc = DateTime.SpecifyKind(request.Date.ToDateTime(TimeOnly.MaxValue) - offset, DateTimeKind.Utc);
+
+        var schedules = await scheduleRepository.GetByDateRange(startUtc, endUtc);
 
         return schedules.Select(s => new ScheduleResult(
             s.Id,

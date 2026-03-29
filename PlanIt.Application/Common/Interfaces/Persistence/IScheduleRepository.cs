@@ -9,5 +9,6 @@ public interface IScheduleRepository
     public Task<Schedule> Delete(Guid scheduleId);
     public Task<Schedule> GetById(Guid scheduleId);
     public Task<List<Schedule>> GetByDate(DateOnly date);
+    public Task<List<Schedule>> GetByDateRange(DateTime startUtc, DateTime endUtc);
     public Task<List<Schedule>> GetByIds(List<Guid> ids);
 }

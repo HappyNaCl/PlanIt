@@ -86,6 +86,11 @@ public class CachedScheduleRepository(
         return dbSchedules;
     }
 
+    public async Task<List<Schedule>> GetByDateRange(DateTime startUtc, DateTime endUtc)
+    {
+        return await inner.GetByDateRange(startUtc, endUtc);
+    }
+
     public async Task<List<Schedule>> GetByIds(List<Guid> ids)
     {
         var cached = new Dictionary<Guid, Schedule>();

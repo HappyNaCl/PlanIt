@@ -11,6 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
     builder.Services.AddApplication();
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddJwtAuthentication(builder.Configuration);
+    builder.Services.AddCorsPolicy();
 }
 
 var app = builder.Build();
@@ -22,6 +23,9 @@ var app = builder.Build();
     }
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseCors("AllowFrontend");
+    // app.UseAuthentication();
+    app.UseAuthorization();
 
     if (args.Contains("--seed"))
         await DatabaseSeeder.SeedAsync(app.Services);

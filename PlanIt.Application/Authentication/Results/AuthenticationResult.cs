@@ -1,8 +1,11 @@
+using PlanIt.Domain.Common.Enums;
+
 namespace PlanIt.Application.Authentication.Results;
 
 public record AuthenticationResult(
-    Guid UserId,
+    Guid Id,
     string Username,
     string Email,
+    UserRole Role,
     string AccessToken,
     string RefreshToken);

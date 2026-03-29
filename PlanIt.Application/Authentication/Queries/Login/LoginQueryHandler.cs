@@ -30,6 +30,7 @@ public class LoginQueryHandler(
             user.Id,
             user.Username,
             user.Email,
+            user.Role,
             accessToken,
             refreshToken.Token
         );

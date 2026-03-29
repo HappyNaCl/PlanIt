@@ -15,6 +15,7 @@ public static class DependencyInjection
     public static IServiceCollection AddMappings(this IServiceCollection services)
     {
         var config = TypeAdapterConfig.GlobalSettings;
+        config.Default.EnumMappingStrategy(EnumMappingStrategy.ByName);
         config.Scan(Assembly.GetExecutingAssembly());
 
         services.AddSingleton(config);
@@ -92,6 +93,22 @@ public static class DependencyInjection
                 };
             });
 
+        return services;
+    }
+
+    public static IServiceCollection AddCorsPolicy(this IServiceCollection services)
+    {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowFrontend", policy =>
+            {
+                policy.WithOrigins("http://localhost:5173")
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            });
+        });
+        
         return services;
     }
 }

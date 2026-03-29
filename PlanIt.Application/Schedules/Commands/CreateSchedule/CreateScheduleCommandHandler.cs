@@ -16,8 +16,8 @@ public class CreateScheduleCommandHandler(
             Name = request.Name,
             Description = request.Description,
             Location = request.Location,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
+            StartTime = request.StartTime.ToUniversalTime(),
+            EndTime = request.EndTime.ToUniversalTime(),
         };
 
         var savedSchedule = await scheduleRepository.Create(newSchedule);

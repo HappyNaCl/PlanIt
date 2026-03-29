@@ -50,6 +50,14 @@ public class ScheduleRepository(IApplicationDbContext context) : IScheduleReposi
             .ToListAsync();
     }
 
+    public async Task<List<Schedule>> GetByDateRange(DateTime startUtc, DateTime endUtc)
+    {
+        return await context.Schedules
+            .AsNoTracking()
+            .Where(s => s.StartTime >= startUtc && s.StartTime <= endUtc)
+            .ToListAsync();
+    }
+
     public async Task<List<Schedule>> GetByIds(List<Guid> ids)
     {
         return await context.Schedules

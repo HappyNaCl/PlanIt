@@ -38,6 +38,7 @@ public class RegisterCommandHandler (
             savedUser.Id,
             savedUser.Username,
             savedUser.Email,
+            savedUser.Role,
             accessToken,
             refreshToken.Token
         );

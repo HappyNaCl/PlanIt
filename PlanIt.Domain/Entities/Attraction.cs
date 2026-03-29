@@ -6,9 +6,9 @@ public class Attraction : Entity<Guid>
 {
     public Attraction() : base(Guid.NewGuid()) { }
 
-    public string Name { get; init; }
-    public string Description { get; init; }
-    public string ImageUrl { get; init; }
+    public string Name { get; init; } = null!;
+    public string Description { get; init; } = null!;
+    public string ImageUrl { get; init; } = null!;
     public int Capacity { get; init; }
 
     public Guid ScheduleId { get; private set; }

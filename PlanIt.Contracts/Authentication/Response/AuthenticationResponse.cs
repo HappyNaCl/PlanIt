@@ -1,9 +1,10 @@
 namespace PlanIt.Contracts.Authentication.Response;
 
 public record AuthenticationResponse(
-    Guid UserId,
+    Guid Id,
     string Username,
     string Email,
+    string Role,
     string AccessToken,
     string RefreshToken
     );
