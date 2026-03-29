@@ -15,7 +15,7 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
         SlidingExpiration = TimeSpan.FromMinutes(10),
     };    
 
-    private string RedisKey(Guid id) => $"user:id:{id}";
+    private static string RedisKey(Guid id) => $"user:id:{id}";
     
     public async Task<User> Create(User user)
     {
@@ -24,7 +24,7 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
         var cacheKey = RedisKey(savedUser.Id);
         await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(user, _json), _options);
         
-        return user;
+        return savedUser;
     }
 
     public async Task<User> GetById(Guid id)
@@ -39,12 +39,7 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
 
         return await inner.GetById(id);
     }
-
-    public async Task<User> GetByUsername(string username)
-    {
-        return await inner.GetByUsername(username);
-    }
-
+    
     public async Task<User?> GetByUsernameDefault(string username)
     {
         return await inner.GetByUsernameDefault(username);

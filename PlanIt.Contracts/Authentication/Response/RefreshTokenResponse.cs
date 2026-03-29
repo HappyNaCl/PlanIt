@@ -1,4 +1,4 @@
-namespace PlanIt.Contracts.Authentication;
+namespace PlanIt.Contracts.Authentication.Response;
 
 public record RefreshTokenResponse(
     string AccessToken,

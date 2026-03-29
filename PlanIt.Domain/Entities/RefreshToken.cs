@@ -6,8 +6,8 @@ namespace PlanIt.Domain.Entities;
 
 public class RefreshToken : Entity<Guid>
 {
-    public RefreshToken() : base(Guid.NewGuid()) {}
-    
+    public RefreshToken() : base(Guid.NewGuid()) { }
+
     public RefreshToken(Guid userId, TimeSpan lifetime) : base(Guid.NewGuid())
     {
         UserId = userId;
@@ -17,7 +17,7 @@ public class RefreshToken : Entity<Guid>
     }
 
     public Guid UserId { get; init; }
-    public string Token { get; init; }
+    public string Token { get; init; } = null!;
     public bool IsUsed { get; set; }
     public DateTime ExpiresAt { get; init; }
 

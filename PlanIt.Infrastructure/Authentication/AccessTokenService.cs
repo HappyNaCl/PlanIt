@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using PlanIt.Application.Common.Interfaces.Authentication;
@@ -10,7 +11,10 @@ using PlanIt.Domain.Common.Exceptions.Authentication;
 
 namespace PlanIt.Infrastructure.Authentication;
 
-public class AccessTokenService(IOptions<TokenSettings> tokenOptions, IDatetimeProvider dateTimeProvider)
+public class AccessTokenService(
+    IOptions<TokenSettings> tokenOptions,
+    IDatetimeProvider dateTimeProvider,
+    ILogger<AccessTokenService> logger)
     : IAccessTokenGenerator, IAccessTokenValidator
 {
     private readonly TokenSettings _tokenSettings = tokenOptions.Value;

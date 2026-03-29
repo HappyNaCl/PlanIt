@@ -6,6 +6,5 @@ public interface IUserRepository
 {
     public Task<User> Create(User user);
     public Task<User> GetById(Guid id);
-    public Task<User> GetByUsername(string username);
     public Task<User?> GetByUsernameDefault(string username);
 }

@@ -42,15 +42,6 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
         return user ?? throw new UserNotFoundException(id.ToString());
     }
 
-    public async Task<User> GetByUsername(string username)
-    {
-        var user = await context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Username == username);
-
-        return user ?? throw new UserNotFoundException(username);
-    }
-
     public async Task<User?> GetByUsernameDefault(string username)
     {
         var user = await context.Users

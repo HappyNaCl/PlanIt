@@ -5,6 +5,8 @@ using PlanIt.Application.Authentication.Commands.RefreshToken;
 using PlanIt.Application.Authentication.Commands.Register;
 using PlanIt.Application.Authentication.Queries.Login;
 using PlanIt.Contracts.Authentication;
+using PlanIt.Contracts.Authentication.Request;
+using PlanIt.Contracts.Authentication.Response;
 using PlanIt.Domain.Common.Exceptions.Authentication;
 
 namespace PlanIt.Api.Controllers;

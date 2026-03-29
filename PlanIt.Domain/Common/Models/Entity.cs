@@ -5,7 +5,7 @@ namespace PlanIt.Domain.Common.Models;
 public abstract class Entity<TId>(TId id) : IEquatable<Entity<TId>>, ISoftDeletable
     where TId : notnull
 {
-    public TId Id { get; protected set; } = id;
+    public TId Id { get; init; } = id;
     public bool IsDeleted { get; private set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

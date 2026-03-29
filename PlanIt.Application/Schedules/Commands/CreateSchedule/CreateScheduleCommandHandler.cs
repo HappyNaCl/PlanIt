@@ -1,0 +1,36 @@
+using MediatR;
+using PlanIt.Application.Common.Interfaces.Persistence;
+using PlanIt.Application.Schedules.Results;
+using PlanIt.Domain.Entities;
+
+namespace PlanIt.Application.Schedules.Commands.CreateSchedule;
+
+public class CreateScheduleCommandHandler(
+    IScheduleRepository scheduleRepository
+    ) : IRequestHandler<CreateScheduleCommand, ScheduleResult>
+{
+    public async Task<ScheduleResult> Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
+    {
+        var newSchedule = new Schedule
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Location = request.Location,
+            StartTime = request.StartTime,
+            EndTime = request.EndTime,
+        };
+
+        var savedSchedule = await scheduleRepository.Create(newSchedule);
+
+        return new ScheduleResult
+        (
+            savedSchedule.Id,
+            savedSchedule.Name,
+            savedSchedule.Description,
+            savedSchedule.Location,
+            savedSchedule.StartTime,
+            savedSchedule.EndTime,
+            0
+        );
+    }
+}

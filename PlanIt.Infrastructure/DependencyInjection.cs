@@ -33,7 +33,15 @@ public static class DependencyInjection
             new CachedUserRepository(
                 sp.GetRequiredService<UserRepository>(),
                 sp.GetRequiredService<IDistributedCache>()
-            ));
+            )
+        );
+        services.AddScoped<ScheduleRepository>();
+        services.AddScoped<IScheduleRepository>(sp =>
+            new CachedScheduleRepository(
+                sp.GetRequiredService<ScheduleRepository>(),
+                sp.GetRequiredService<IDistributedCache>()
+            )
+        );
         
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 

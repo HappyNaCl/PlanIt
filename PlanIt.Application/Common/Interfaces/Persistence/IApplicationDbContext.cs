@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PlanIt.Domain.Entities;
-
 namespace PlanIt.Application.Common.Interfaces.Persistence;
 
 public interface IApplicationDbContext

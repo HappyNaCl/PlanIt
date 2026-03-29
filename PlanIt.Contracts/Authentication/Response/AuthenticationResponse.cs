@@ -1,4 +1,4 @@
-namespace PlanIt.Contracts.Authentication;
+namespace PlanIt.Contracts.Authentication.Response;
 
 public record AuthenticationResponse(
     Guid UserId,

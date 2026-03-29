@@ -1,4 +1,4 @@
-﻿using PlanIt.Domain.Common.Models;
+using PlanIt.Domain.Common.Models;
 
 namespace PlanIt.Domain.Entities;
 
@@ -6,15 +6,9 @@ public class Schedule : Entity<Guid>
 {
     public Schedule() : base(Guid.NewGuid()) { }
 
-    public Schedule(Guid id, string name, DateTime startTime, DateTime endTime)
-        : base(id)
-    {
-        Name = name;
-        StartTime = startTime;
-        EndTime = endTime;
-    }
-    
-    public string Name { get; init; }
+    public string Name { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public string Location { get; set; } = null!;
     public DateTime StartTime { get; init; }
     public DateTime EndTime { get; init; }
 
