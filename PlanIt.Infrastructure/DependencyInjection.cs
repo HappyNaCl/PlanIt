@@ -12,6 +12,7 @@ using PlanIt.Infrastructure.CachedPersistence;
 using PlanIt.Infrastructure.Datetime;
 using PlanIt.Infrastructure.FileUploader;
 using PlanIt.Infrastructure.Persistence;
+using StackExchange.Redis;
 
 namespace PlanIt.Infrastructure;
 
@@ -28,6 +29,11 @@ public static class DependencyInjection
         services.AddStackExchangeRedisCache(options =>
             options.Configuration = config.GetConnectionString("Redis"));
 
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(config.GetConnectionString("Redis")!));
+        services.AddSingleton<IDatabase>(sp =>
+            sp.GetRequiredService<IConnectionMultiplexer>().GetDatabase());
+
         services.AddScoped<UserRepository>();
         services.AddScoped<IUserRepository>(sp =>
             new CachedUserRepository(
@@ -42,7 +48,14 @@ public static class DependencyInjection
                 sp.GetRequiredService<IDistributedCache>()
             )
         );
-        
+        services.AddScoped<AttractionRepository>();
+        services.AddScoped<IAttractionRepository>(sp =>
+            new CachedAttractionRepository(
+                sp.GetRequiredService<AttractionRepository>(),
+                sp.GetRequiredService<IDatabase>()
+            )
+        );
+
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();

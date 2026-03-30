@@ -63,6 +63,11 @@ public class CachedScheduleRepository(
         return await inner.GetById(scheduleId);
     }
 
+    public async Task<Schedule> GetByIdForUpdate(Guid scheduleId)
+    {
+        return await inner.GetByIdForUpdate(scheduleId);
+    }
+
     public async Task<List<Schedule>> GetByDate(DateOnly date)
     {
         var dateKey = DateKey(date);
@@ -86,7 +91,7 @@ public class CachedScheduleRepository(
         return dbSchedules;
     }
 
-    public async Task<List<Schedule>> GetByDateRange(DateTime startUtc, DateTime endUtc)
+    public async Task<List<(Schedule Schedule, int AttractionCount)>> GetByDateRange(DateTime startUtc, DateTime endUtc)
     {
         return await inner.GetByDateRange(startUtc, endUtc);
     }

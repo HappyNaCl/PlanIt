@@ -17,13 +17,13 @@ public class GetSchedulesByDateQueryHandler(
         var schedules = await scheduleRepository.GetByDateRange(startUtc, endUtc);
 
         return schedules.Select(s => new ScheduleResult(
-            s.Id,
-            s.Name,
-            s.Description,
-            s.Location,
-            s.StartTime,
-            s.EndTime,
-            s.Attractions.Count
+            s.Schedule.Id,
+            s.Schedule.Name,
+            s.Schedule.Description,
+            s.Schedule.Location,
+            s.Schedule.StartTime,
+            s.Schedule.EndTime,
+            s.AttractionCount
         )).ToList();
     }
 }

@@ -36,8 +36,19 @@ public class ScheduleRepository(IApplicationDbContext context) : IScheduleReposi
     {
         var schedule = await context.Schedules
             .AsNoTracking()
+            .Include(s => s.Attractions)
             .FirstOrDefaultAsync(s => s.Id == scheduleId)
-            ?? throw new ScheduleNotFoundException(scheduleId);
+                        ?? throw new ScheduleNotFoundException(scheduleId);
+
+        return schedule;
+    }
+
+    public async Task<Schedule> GetByIdForUpdate(Guid scheduleId)
+    {
+        var schedule = await context.Schedules
+            .Include(s => s.Attractions)
+            .FirstOrDefaultAsync(s => s.Id == scheduleId) 
+                       ?? throw new ScheduleNotFoundException(scheduleId);
 
         return schedule;
     }
@@ -50,11 +61,12 @@ public class ScheduleRepository(IApplicationDbContext context) : IScheduleReposi
             .ToListAsync();
     }
 
-    public async Task<List<Schedule>> GetByDateRange(DateTime startUtc, DateTime endUtc)
+    public async Task<List<(Schedule Schedule, int AttractionCount)>> GetByDateRange(DateTime startUtc, DateTime endUtc)
     {
         return await context.Schedules
             .AsNoTracking()
             .Where(s => s.StartTime >= startUtc && s.StartTime <= endUtc)
+            .Select(s => new ValueTuple<Schedule, int>(s, s.Attractions.Count()))
             .ToListAsync();
     }
 

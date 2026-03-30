@@ -16,8 +16,6 @@ public class CreateScheduleCommandValidator : AbstractValidator<CreateScheduleCo
             .LessThan(x => x.EndTime).WithMessage("Start time must be before end time.");
         RuleFor(x => x.EndTime)
             .NotEmpty().WithMessage("End time is required.")
-            .GreaterThan(x => x.StartTime).WithMessage("End time must be after start time.")
-            .Must((cmd, endTime) => endTime.Date == cmd.StartTime.Date)
-            .WithMessage("End time must be on the same day as start time.");
+            .GreaterThan(x => x.StartTime).WithMessage("End time must be after start time.");
     }
 }
