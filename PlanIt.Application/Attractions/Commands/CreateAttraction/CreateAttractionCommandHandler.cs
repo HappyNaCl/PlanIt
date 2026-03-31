@@ -38,7 +38,8 @@ public class CreateAttractionCommandHandler(
             saved.ScheduleId,
             saved.Name,
             saved.Description,
-            saved.ImageKey,
+            $"{fileUploader.GetEndpoint()}{saved.ImageKey}",
+            saved.Capacity,
             saved.Capacity);
     }
 }

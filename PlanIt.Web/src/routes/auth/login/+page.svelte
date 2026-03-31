@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import Brand from '$lib/components/Brand.svelte';
-	import AuthFooter from '$lib/components/AuthFooter.svelte';
+	import Brand from '$lib/components/general/Brand.svelte';
+	import AuthFooter from '$lib/components/general/AuthFooter.svelte';
 	import toast from 'svelte-french-toast';
 	import { api } from '$lib/services/api';
 	import type { AuthResponse } from '$lib/types/responses/authResponse';

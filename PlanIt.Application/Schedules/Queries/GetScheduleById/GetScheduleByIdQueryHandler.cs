@@ -1,4 +1,5 @@
 using MediatR;
+using PlanIt.Application.Common.Interfaces.FileUploader;
 using PlanIt.Application.Common.Interfaces.Persistence;
 using PlanIt.Application.Schedules.Results;
 
@@ -6,7 +7,8 @@ namespace PlanIt.Application.Schedules.Queries.GetScheduleById;
 
 public class GetScheduleByIdQueryHandler(
     IScheduleRepository scheduleRepository,
-    IAttractionRepository attractionRepository
+    IAttractionRepository attractionRepository,
+    IFileUploader fileUploader
     ) : IRequestHandler<GetScheduleByIdQuery, DetailedScheduleResult>
 {
     public async Task<DetailedScheduleResult> Handle(GetScheduleByIdQuery request, CancellationToken cancellationToken)
@@ -25,7 +27,7 @@ public class GetScheduleByIdQueryHandler(
                     a.Id,
                     a.Name,
                     a.Description,
-                    a.ImageKey,
+                    $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
                     a.Capacity,
                     a.Capacity - a.Registrants.Count
                 )).ToList()

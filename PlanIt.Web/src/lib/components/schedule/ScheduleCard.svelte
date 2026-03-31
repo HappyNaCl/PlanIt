@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { MapPin, Clock, Waypoints } from '@lucide/svelte';
 	import type { Schedule } from '$lib/types/models/schedule';
+	import { resolve } from '$app/paths';
 
 	let { schedule }: { schedule: Schedule } = $props();
 
@@ -9,8 +10,9 @@
 	}
 </script>
 
-<div
-	class="group cursor-pointer rounded-xl border border-white/5 bg-white/3 p-5 transition-all duration-200 hover:border-blue-500/20 hover:bg-white/5"
+<a
+	href={resolve(`/schedule/${schedule.id}`)}
+	class="group block cursor-pointer rounded-xl border border-white/5 bg-white/3 p-5 transition-all duration-200 hover:border-blue-500/20 hover:bg-white/5"
 >
 	<div class="mb-3 flex items-start justify-between gap-4">
 		<div>
@@ -37,4 +39,4 @@
 			{formatTime(schedule.startTime)} – {formatTime(schedule.endTime)}
 		</span>
 	</div>
-</div>
+</a>

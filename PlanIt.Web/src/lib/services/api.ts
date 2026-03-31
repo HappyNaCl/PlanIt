@@ -70,3 +70,7 @@ api.interceptors.response.use(
 		}
 	}
 );
+
+export interface ApiError {
+	error: Record<string, string>;
+}

@@ -6,17 +6,10 @@
 	import { Query, useQueryClient } from '@sveltestack/svelte-query';
 	import { api } from '$lib/services/api';
 	import type { Schedule } from '$lib/types/models/schedule';
-	import Navbar from '$lib/components/Navbar.svelte';
-	import {
-		Telescope,
-		MapPin,
-		ChevronLeft,
-		ChevronRight,
-		CalendarDays,
-		Plus,
-		X
-	} from '@lucide/svelte';
-	import ScheduleCard from '$lib/components/ScheduleCard.svelte';
+	import Navbar from '$lib/components/general/Navbar.svelte';
+	import { Telescope, MapPin, ChevronLeft, ChevronRight, CalendarDays, Plus, X } from '@lucide/svelte';
+	import ScheduleCard from '$lib/components/schedule/ScheduleCard.svelte';
+	import CreateScheduleForm from '$lib/components/schedule/CreateScheduleForm.svelte';
 	import toast from 'svelte-french-toast';
 	import { DatePicker, Dialog } from 'bits-ui';
 	import { CalendarDate, today, getLocalTimeZone } from '@internationalized/date';
@@ -54,41 +47,11 @@
 
 	const queryClient = useQueryClient();
 
-	// Create schedule modal
 	let createOpen = $state(false);
-	let form = $state({ name: '', description: '', location: '', startTime: '', endTime: '' });
-	let creating = $state(false);
 
-	function openCreate() {
-		const d = toDateStr(calDate);
-		form = {
-			name: '',
-			description: '',
-			location: '',
-			startTime: `${d}T09:00`,
-			endTime: `${d}T17:00`
-		};
-		createOpen = true;
-	}
-
-	async function createSchedule() {
-		creating = true;
-		try {
-			await api.post('/schedules', {
-				name: form.name,
-				description: form.description,
-				location: form.location,
-				startTime: new Date(form.startTime).toISOString(),
-				endTime: new Date(form.endTime).toISOString()
-			});
-			toast.success('Expedition charted successfully');
-			createOpen = false;
-			queryClient.invalidateQueries(['schedules', date]);
-		} catch (error) {
-			toast.error(`Failed to chart expedition: ${error}`);
-		} finally {
-			creating = false;
-		}
+	function onCreateSuccess() {
+		createOpen = false;
+		queryClient.invalidateQueries(['schedules', date]);
 	}
 </script>
 
@@ -127,8 +90,11 @@
 						class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition hover:bg-white/10"
 					>
 						<CalendarDays class="h-4 w-4 shrink-0 text-blue-300/70" />
-						<span class="min-w-[9rem] text-left">
-							{new Date(calDate.year, calDate.month - 1, calDate.day).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+						<span class="min-w-36 text-left">
+							{new Date(calDate.year, calDate.month - 1, calDate.day).toLocaleDateString(
+								undefined,
+								{ month: 'short', day: 'numeric', year: 'numeric' }
+							)}
 						</span>
 					</DatePicker.Trigger>
 
@@ -196,7 +162,7 @@
 				{#if isAdmin}
 					<div class="mx-1 h-6 w-px bg-white/10"></div>
 					<button
-						onclick={openCreate}
+						onclick={() => (createOpen = true)}
 						class="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-2 text-xs font-medium text-blue-300 transition hover:border-blue-400/50 hover:bg-blue-500/20"
 					>
 						<Plus class="h-3.5 w-3.5" />
@@ -285,104 +251,7 @@
 				</Dialog.Close>
 			</div>
 
-			<form
-				onsubmit={(e) => {
-					e.preventDefault();
-					createSchedule();
-				}}
-				class="space-y-4"
-			>
-				<div>
-					<label class="mb-1.5 block text-xs font-medium text-white/50" for="name">
-						Expedition Name
-					</label>
-					<input
-						id="name"
-						type="text"
-						bind:value={form.name}
-						required
-						placeholder="Morning Market Run"
-						class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 placeholder-white/20 transition outline-none focus:border-blue-500/40 focus:bg-white/8"
-					/>
-				</div>
-
-				<div>
-					<label class="mb-1.5 block text-xs font-medium text-white/50" for="description">
-						Description
-					</label>
-					<textarea
-						id="description"
-						bind:value={form.description}
-						required
-						rows="2"
-						placeholder="A brief description of the outing..."
-						class="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 placeholder-white/20 transition outline-none focus:border-blue-500/40 focus:bg-white/8"
-					></textarea>
-				</div>
-
-				<div>
-					<label class="mb-1.5 block text-xs font-medium text-white/50" for="location">
-						Location
-					</label>
-					<input
-						id="location"
-						type="text"
-						bind:value={form.location}
-						required
-						placeholder="Salt Lake City, UT"
-						class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 placeholder-white/20 transition outline-none focus:border-blue-500/40 focus:bg-white/8"
-					/>
-				</div>
-
-				<div class="grid grid-cols-2 gap-3">
-					<div>
-						<label class="mb-1.5 block text-xs font-medium text-white/50" for="startTime">
-							Launch Time
-						</label>
-						<input
-							id="startTime"
-							type="datetime-local"
-							bind:value={form.startTime}
-							required
-							class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 scheme-dark transition outline-none focus:border-blue-500/40"
-						/>
-					</div>
-					<div>
-						<label class="mb-1.5 block text-xs font-medium text-white/50" for="endTime">
-							Landing Time
-						</label>
-						<input
-							id="endTime"
-							type="datetime-local"
-							bind:value={form.endTime}
-							required
-							class="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 scheme-dark transition outline-none focus:border-blue-500/40"
-						/>
-					</div>
-				</div>
-
-				<div class="flex justify-end gap-2 pt-1">
-					<Dialog.Close
-						class="rounded-lg border border-white/10 px-4 py-2 text-sm text-white/50 transition hover:bg-white/5 hover:text-white/70"
-					>
-						Cancel
-					</Dialog.Close>
-					<button
-						type="submit"
-						disabled={creating}
-						class="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-					>
-						{#if creating}
-							<div
-								class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white"
-							></div>
-						{:else}
-							<Plus class="h-3.5 w-3.5" />
-						{/if}
-						Chart It
-					</button>
-				</div>
-			</form>
+			<CreateScheduleForm {date} onSuccess={onCreateSuccess} />
 		</Dialog.Content>
 	</Dialog.Portal>
 </Dialog.Root>

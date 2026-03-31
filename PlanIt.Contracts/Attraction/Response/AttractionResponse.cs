@@ -5,5 +5,6 @@ public record AttractionResponse(
     Guid ScheduleId,
     string Name,
     string Description,
-    string ImageKey,
-    int Capacity);
+    string ImageUrl,
+    int Capacity,
+    int RemainingCapacity);
