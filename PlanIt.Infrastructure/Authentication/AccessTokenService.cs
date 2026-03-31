@@ -13,8 +13,7 @@ namespace PlanIt.Infrastructure.Authentication;
 
 public class AccessTokenService(
     IOptions<TokenSettings> tokenOptions,
-    IDatetimeProvider dateTimeProvider,
-    ILogger<AccessTokenService> logger)
+    IDatetimeProvider dateTimeProvider)
     : IAccessTokenGenerator, IAccessTokenValidator
 {
     private readonly TokenSettings _tokenSettings = tokenOptions.Value;

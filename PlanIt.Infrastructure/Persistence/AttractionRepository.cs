@@ -9,6 +9,24 @@ public class AttractionRepository(
     IApplicationDbContext context
     ) : IAttractionRepository
 {
+    public async Task<Attraction> Create(Attraction attraction)
+    {
+        context.Attractions.Add(attraction);
+        await context.SaveChangesAsync(CancellationToken.None);
+        return attraction;
+    }
+
+    public async Task<Attraction> Delete(Guid attractionId)
+    {
+        var attraction = await context.Attractions
+            .FirstOrDefaultAsync(a => a.Id == attractionId)
+            ?? throw new AttractionNotFoundException(attractionId);
+
+        context.Attractions.Remove(attraction);
+        await context.SaveChangesAsync(CancellationToken.None);
+        return attraction;
+    }
+
     public async Task<List<Attraction>> GetByScheduleId(Guid scheduleId)
     {
         return await context.Attractions

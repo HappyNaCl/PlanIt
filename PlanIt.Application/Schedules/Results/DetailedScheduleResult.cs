@@ -13,6 +13,6 @@ public record AttractionResultDto(
     Guid Id,
     string Name,
     string Description,
-    string ImageUrl,
+    string ImageKey,
     int Capacity,
     int RemainingCapacity);

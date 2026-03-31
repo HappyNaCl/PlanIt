@@ -1,6 +1,6 @@
 using PlanIt.Domain.Common.Enums;
 
-namespace PlanIt.Application.Me.Result;
+namespace PlanIt.Application.Me.Results;
 
 public record MeResult(
     Guid Id,

@@ -4,7 +4,7 @@ using DomainValidationException = PlanIt.Domain.Common.Exceptions.Validation.Val
 
 namespace PlanIt.Application.Common.Behaviors;
 
-public class ValidationBehavior<TRequest, TResponse>(IValidator<TRequest>? validator) :
+public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators) :
     IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
@@ -13,6 +13,7 @@ public class ValidationBehavior<TRequest, TResponse>(IValidator<TRequest>? valid
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
+        var validator = validators.FirstOrDefault();
         if (validator is null)
             return await next(cancellationToken);
 

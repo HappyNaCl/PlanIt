@@ -1,7 +1,7 @@
 using MediatR;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Persistence;
-using PlanIt.Application.Me.Result;
+using PlanIt.Application.Me.Results;
 
 namespace PlanIt.Application.Me.Queries;
 

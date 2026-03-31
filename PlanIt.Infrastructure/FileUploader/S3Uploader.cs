@@ -1,21 +1,57 @@
+using Amazon.S3;
+using Amazon.S3.Model;
+using Microsoft.Extensions.Options;
 using PlanIt.Application.Common.Interfaces.FileUploader;
 
 namespace PlanIt.Infrastructure.FileUploader;
 
-public class S3Uploader : IFileUploader
+public class S3Uploader(
+    IAmazonS3 s3Client,
+    IOptions<S3Settings> settings
+    ) : IFileUploader
 {
-    public Task<string> UploadAsync()
+    private readonly S3Settings _settings = settings.Value;
+
+    public async Task<string> UploadAsync(Stream stream, string fileName, string contentType, string prefix)
     {
-        throw new NotImplementedException();
+        var extension = Path.GetExtension(fileName);
+        var key = $"{prefix}/{Guid.NewGuid()}{extension}";
+
+        var request = new PutObjectRequest
+        {
+            BucketName = _settings.BucketName,
+            Key = key,
+            InputStream = stream,
+            ContentType = contentType,
+            // DisablePayloadSigning = true
+        };
+
+        await s3Client.PutObjectAsync(request);
+
+        return key;
     }
 
-    public Task<Stream> DownloadAsync()
+    public async Task<Stream> DownloadAsync(string key)
     {
-        throw new NotImplementedException();
+        var request = new GetObjectRequest
+        {
+            BucketName = _settings.BucketName,
+            Key = key
+        };
+
+        var response = await s3Client.GetObjectAsync(request);
+
+        return response.ResponseStream;
     }
 
-    public Task DeleteAsync()
+    public async Task DeleteAsync(string key)
     {
-        throw new NotImplementedException();
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _settings.BucketName,
+            Key = key
+        };
+
+        await s3Client.DeleteObjectAsync(request);
     }
 }

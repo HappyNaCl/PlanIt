@@ -22,6 +22,22 @@ public class CachedAttractionRepository(
     private static string ScheduleKey(Guid scheduleId) => $"schedule:attraction:{scheduleId}";
     private static string RemainingCapacityKey(Guid attractionId) => $"attraction:remaining:{attractionId}";
 
+    public async Task<Attraction> Create(Attraction attraction)
+    {
+        var result = await inner.Create(attraction);
+        await cache.KeyDeleteAsync(ScheduleKey(attraction.ScheduleId));
+        return result;
+    }
+
+    public async Task<Attraction> Delete(Guid attractionId)
+    {
+        var result = await inner.Delete(attractionId);
+        await cache.KeyDeleteAsync(IdKey(attractionId));
+        await cache.KeyDeleteAsync(RemainingCapacityKey(attractionId));
+        await cache.KeyDeleteAsync(ScheduleKey(result.ScheduleId));
+        return result;
+    }
+
     public async Task<List<Attraction>> GetByScheduleId(Guid scheduleId)
     {
         var cachedIds = await cache.SetMembersAsync(ScheduleKey(scheduleId));

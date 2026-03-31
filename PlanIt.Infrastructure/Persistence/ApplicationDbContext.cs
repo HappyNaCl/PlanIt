@@ -50,6 +50,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 entity.HasKey(e => e.Id);
                 entity.HasIndex(e => e.Id);
                 entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Description).HasMaxLength(150);
+                entity.Property(e => e.Location).HasMaxLength(50);
                 entity.Property(e => e.StartTime).IsRequired().HasColumnType("timestamptz");
                 entity.Property(e => e.EndTime).IsRequired().HasColumnType("timestamptz");
                 entity.HasMany(e => e.Attractions)
@@ -65,7 +67,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(e => e.ScheduleId);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Description).HasMaxLength(150);
-            entity.Property(e => e.ImageUrl).HasMaxLength(200);
+            entity.Property(e => e.ImageKey).HasMaxLength(75);
             entity.Property(e => e.Capacity).IsRequired();
             entity.HasMany(e => e.Registrants)
                 .WithOne(r => r.Attraction)

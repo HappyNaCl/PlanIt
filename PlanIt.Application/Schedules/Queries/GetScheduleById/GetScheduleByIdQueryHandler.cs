@@ -25,7 +25,7 @@ public class GetScheduleByIdQueryHandler(
                     a.Id,
                     a.Name,
                     a.Description,
-                    a.ImageUrl,
+                    a.ImageKey,
                     a.Capacity,
                     a.Capacity - a.Registrants.Count
                 )).ToList()

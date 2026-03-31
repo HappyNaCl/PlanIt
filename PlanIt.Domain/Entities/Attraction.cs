@@ -8,10 +8,10 @@ public class Attraction : Entity<Guid>
 
     public string Name { get; init; } = null!;
     public string Description { get; init; } = null!;
-    public string ImageUrl { get; init; } = null!;
+    public string ImageKey { get; init; } = null!;
     public int Capacity { get; init; }
 
-    public Guid ScheduleId { get; private set; }
+    public Guid ScheduleId { get; init; }
     public Schedule Schedule { get; private set; } = null!;
     public ICollection<Registrant> Registrants { get; private set; } = new List<Registrant>();
 }

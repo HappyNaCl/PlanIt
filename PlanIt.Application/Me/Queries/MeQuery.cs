@@ -1,5 +1,5 @@
 using MediatR;
-using PlanIt.Application.Me.Result;
+using PlanIt.Application.Me.Results;
 
 namespace PlanIt.Application.Me.Queries;
 

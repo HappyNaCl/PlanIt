@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Datetime;
+using PlanIt.Application.Common.Interfaces.FileUploader;
 using PlanIt.Application.Common.Interfaces.Persistence;
 using PlanIt.Infrastructure.Authentication;
 using PlanIt.Infrastructure.CachedPersistence;
@@ -67,13 +68,14 @@ public static class DependencyInjection
         services.AddScoped<IRefreshTokenValidator>(sp => sp.GetRequiredService<RefreshTokenService>());
         
         services.AddSingleton<IDatetimeProvider, DatetimeProvider>();
-        
+        services.AddSingleton<IFileUploader, S3Uploader>();
+
         services.Configure<TokenSettings>(config.GetSection(TokenSettings.SectionName));
+        services.Configure<S3Settings>(config.GetSection(S3Settings.SectionName));
         
         services.AddSingleton<IAmazonS3>(_ =>
             {
                 var s3Config = config.GetSection(S3Settings.SectionName);
-
                 return new AmazonS3Client(
                     new BasicAWSCredentials(
                         s3Config["AccessKey"],
