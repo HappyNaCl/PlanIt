@@ -17,6 +17,8 @@
 	}
 </script>
 
+<svelte:head><title>Register — PlanIt</title></svelte:head>
+
 <div class="mx-auto w-full max-w-md">
 	<Brand />
 

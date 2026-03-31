@@ -47,6 +47,8 @@ public class CachedAttractionRepository(
             var attractions = new List<Attraction>();
             var cacheHit = true;
 
+            // If all id from cachedIds have cached data, it will break the loop and return
+            // If one miss, fetch from repo and populate cache
             foreach (var idValue in cachedIds)
             {
                 var json = await cache.StringGetAsync(IdKey(Guid.Parse(idValue!)));

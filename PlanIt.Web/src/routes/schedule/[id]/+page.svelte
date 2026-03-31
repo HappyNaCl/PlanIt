@@ -1,31 +1,36 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
-	import { page } from '$app/stores';
-	import { resolve } from '$app/paths';
-	import { isAuthenticated, isInitialized, getAuth } from '$lib/stores/auth.svelte';
-	import { Query, useQueryClient } from '@sveltestack/svelte-query';
-	import { api } from '$lib/services/api';
-	import type { DetailedScheduleResponse } from '$lib/types/responses/detailedScheduleResponse';
-	import Navbar from '$lib/components/general/Navbar.svelte';
-	import UpdateScheduleDialog from '$lib/components/schedule/UpdateScheduleDialog.svelte';
-	import DeleteScheduleDialog from '$lib/components/schedule/DeleteScheduleDialog.svelte';
-	import { MapPin, Clock, ChevronLeft, Waypoints, Pencil, Trash2 } from '@lucide/svelte';
-	import toast from 'svelte-french-toast';
+	import { goto } from "$app/navigation";
+	import { browser } from "$app/environment";
+	import { page } from "$app/stores";
+	import { resolve } from "$app/paths";
+	import { isAuthenticated, isInitialized, getAuth } from "$lib/stores/auth.svelte";
+	import { Query, useQueryClient } from "@sveltestack/svelte-query";
+	import { api } from "$lib/services/api";
+	import type { DetailedScheduleResponse } from "$lib/types/responses/detailedScheduleResponse";
+	import type { Attraction } from "$lib/types/models/attraction";
+	import Navbar from "$lib/components/general/Navbar.svelte";
+	import UpdateScheduleDialog from "$lib/components/schedule/UpdateScheduleDialog.svelte";
+	import DeleteScheduleDialog from "$lib/components/schedule/DeleteScheduleDialog.svelte";
+	import CreateAttractionDialog from "$lib/components/attraction/CreateAttractionDialog.svelte";
+	import AttractionCard from "$lib/components/attraction/AttractionCard.svelte";
+	import AttractionCardSkeleton from "$lib/components/attraction/AttractionCardSkeleton.svelte";
+	import { MapPin, Clock, ChevronLeft, Waypoints, Pencil, Trash2, Plus } from "@lucide/svelte";
+	import toast from "svelte-french-toast";
 
 	$effect(() => {
 		if (browser && isInitialized() && !isAuthenticated()) {
-			goto(resolve('/auth/login'));
+			goto(resolve("/auth/login"));
 		}
 	});
 
 	const id = $derived($page.params.id);
-	const isAdmin = $derived(getAuth().user?.role === 'ADMIN');
+	const isAdmin = $derived(getAuth().user?.role === "ADMIN");
 	const queryClient = useQueryClient();
 
 	async function fetchSchedule(scheduleId: string) {
 		try {
 			const { data } = await api.get<DetailedScheduleResponse>(`/schedules/${scheduleId}`);
+			scheduleTitle = data.name;
 			return data;
 		} catch (error) {
 			toast.error(`Failed to load expedition: ${error}`);
@@ -33,22 +38,37 @@
 		}
 	}
 
+	async function fetchAttractions(scheduleId: string) {
+		try {
+			const { data } = await api.get<Attraction[]>(`/schedules/${scheduleId}/attractions`);
+			return data;
+		} catch (error) {
+			toast.error(`Failed to load waypoints: ${error}`);
+			throw error;
+		}
+	}
+
 	function formatTime(time: string) {
-		return new Date(time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+		return new Date(time).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 	}
 
 	function formatDate(time: string) {
 		return new Date(time).toLocaleDateString(undefined, {
-			weekday: 'long',
-			month: 'long',
-			day: 'numeric',
-			year: 'numeric'
+			weekday: "long",
+			month: "long",
+			day: "numeric",
+			year: "numeric"
 		});
 	}
 
+	let scheduleTitle = $state<string | null>(null);
+
 	let updateOpen = $state(false);
 	let deleteOpen = $state(false);
+	let createAttractionOpen = $state(false);
 </script>
+
+<svelte:head><title>{scheduleTitle ? `${scheduleTitle} — PlanIt` : "PlanIt"}</title></svelte:head>
 
 <div class="relative min-h-screen overflow-hidden bg-[#04060f]">
 	<!-- Nebula blobs -->
@@ -63,7 +83,7 @@
 
 	<main class="relative z-10 mx-auto max-w-3xl px-6 py-10">
 		<a
-			href={resolve('/')}
+			href={resolve("/")}
 			class="mb-8 flex items-center gap-1.5 text-sm text-white/40 transition hover:text-white/70"
 		>
 			<ChevronLeft class="h-4 w-4" />
@@ -72,9 +92,10 @@
 
 		<Query
 			options={{
-				queryKey: ['schedule', id],
-				queryFn: () => fetchSchedule(id ?? ''),
-				enabled: browser
+				queryKey: ["schedule", id],
+				queryFn: () => fetchSchedule(id ?? ""),
+				enabled: browser,
+				staleTime: 20000
 			}}
 		>
 			<div slot="query" let:queryResult>
@@ -130,62 +151,92 @@
 							</span>
 							<span class="flex items-center gap-1.5">
 								<Clock class="h-3.5 w-3.5 shrink-0 text-blue-400/50" />
-								{formatDate(schedule.startTime)} · {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+								{formatDate(schedule.startTime)} · {formatTime(schedule.startTime)} - {formatTime(
+									schedule.endTime
+								)}
 							</span>
 						</div>
 					</div>
 
 					<!-- Waypoints -->
 					<div>
-						<div class="mb-4 flex items-center gap-2">
-							<Waypoints class="h-4 w-4 text-white/20" />
-							<h2 class="text-sm font-semibold tracking-wide text-white/60 uppercase">Waypoints</h2>
+						<div class="mb-4 flex items-center justify-between gap-2">
+							<div class="flex items-center gap-2">
+								<Waypoints class="h-4 w-4 text-white/20" />
+								<h2 class="text-sm font-semibold tracking-wide text-white/60 uppercase">
+									Waypoints
+								</h2>
+							</div>
+							{#if isAdmin}
+								<button
+									onclick={() => (createAttractionOpen = true)}
+									class="flex items-center gap-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-300 transition hover:border-blue-400/50 hover:bg-blue-500/20"
+								>
+									<Plus class="h-3.5 w-3.5" />
+									Add Waypoint
+								</button>
+							{/if}
 						</div>
 
-						{#if schedule.attractions.length === 0}
-							<div
-								class="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-white/2 py-16 text-center"
-							>
-								<Waypoints class="mb-3 h-8 w-8 text-white/10" />
-								<p class="text-sm text-white/20">No waypoints on this expedition yet.</p>
-							</div>
-						{:else}
-							<div class="space-y-3">
-								{#each schedule.attractions as attraction, i (attraction.id)}
-									<div class="flex items-start gap-4 rounded-xl border border-white/5 bg-white/3 p-4">
-										<span
-											class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-400/70"
-										>
-											{i + 1}
-										</span>
-										<div class="min-w-0 flex-1">
-											<div class="mb-1 flex items-center justify-between gap-3">
-												<h3 class="font-medium text-white/90">{attraction.name}</h3>
-												<span class="shrink-0 text-xs text-white/30">
-													{attraction.remainingCapacity}/{attraction.capacity} spots
-												</span>
-											</div>
-											{#if attraction.description}
-												<p class="text-sm text-white/40">{attraction.description}</p>
-											{/if}
-										</div>
+						<Query
+							options={{
+								queryKey: ["attractions", id],
+								queryFn: () => fetchAttractions(id ?? ""),
+								enabled: browser
+							}}
+						>
+							<div slot="query" let:queryResult={attractionsResult}>
+								{#if attractionsResult.isLoading}
+									<div class="space-y-3">
+										{#each [1, 2, 3] as i (i)}
+											<AttractionCardSkeleton />
+										{/each}
 									</div>
-								{/each}
+								{:else if attractionsResult.isError}
+									<div
+										class="flex flex-col items-center justify-center rounded-2xl border border-red-500/10 bg-red-500/5 py-10 text-center"
+									>
+										<p class="text-sm text-red-400/60">Failed to load waypoints.</p>
+									</div>
+								{:else if !attractionsResult.data?.length}
+									<div
+										class="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-white/2 py-16 text-center"
+									>
+										<Waypoints class="mb-3 h-8 w-8 text-white/10" />
+										<p class="text-sm text-white/20">No waypoints on this expedition yet.</p>
+									</div>
+								{:else}
+									<div class="space-y-3">
+										{#each attractionsResult.data as attraction, i (attraction.id)}
+											<AttractionCard
+												{attraction}
+												index={i}
+												onJoin={() => queryClient.invalidateQueries(["attractions", id])}
+											/>
+										{/each}
+									</div>
+								{/if}
 							</div>
-						{/if}
+						</Query>
 					</div>
 
+					<CreateAttractionDialog
+						scheduleId={id ?? ""}
+						bind:open={createAttractionOpen}
+						onSuccess={() => queryClient.invalidateQueries(["attractions", id])}
+					/>
+
 					<UpdateScheduleDialog
-						scheduleId={id ?? ''}
+						scheduleId={id ?? ""}
 						{schedule}
 						bind:open={updateOpen}
-						onSuccess={() => queryClient.invalidateQueries(['schedule', id])}
+						onSuccess={() => queryClient.invalidateQueries(["schedule", id])}
 					/>
 
 					<DeleteScheduleDialog
-						scheduleId={id ?? ''}
+						scheduleId={id ?? ""}
 						bind:open={deleteOpen}
-						onSuccess={() => goto(resolve('/'))}
+						onSuccess={() => goto(resolve("/"))}
 					/>
 				{/if}
 			</div>

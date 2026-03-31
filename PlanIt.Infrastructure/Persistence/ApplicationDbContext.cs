@@ -66,7 +66,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasKey(e => e.Id);
             entity.HasIndex(e => e.ScheduleId);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Description).HasMaxLength(150);
+            entity.Property(e => e.Description).IsRequired(false).HasMaxLength(150);
             entity.Property(e => e.ImageKey).HasMaxLength(75);
             entity.Property(e => e.Capacity).IsRequired();
             entity.HasMany(e => e.Registrants)

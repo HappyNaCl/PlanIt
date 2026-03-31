@@ -33,6 +33,8 @@
 	}
 </script>
 
+<svelte:head><title>Login — PlanIt</title></svelte:head>
+
 <div class="mx-auto w-full max-w-md">
 	<Brand />
 

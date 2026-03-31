@@ -16,9 +16,9 @@
 	let { scheduleId, schedule, open = $bindable(), onSuccess }: Props = $props();
 
 	let form = $state({
-		name: schedule.name,
-		description: schedule.description,
-		location: schedule.location
+		name: "",
+		description: "",
+		location: ""
 	});
 	let errors = $state<Record<string, string>>({});
 	let saving = $state(false);

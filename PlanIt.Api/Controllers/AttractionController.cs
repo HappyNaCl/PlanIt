@@ -1,10 +1,10 @@
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PlanIt.Application.Attractions.Commands.CreateAttraction;
 using PlanIt.Application.Attractions.Commands.DeleteAttraction;
+using PlanIt.Application.Attractions.Queries.GetByScheduleId;
 using PlanIt.Contracts.Attraction.Request;
 using PlanIt.Contracts.Attraction.Response;
 using PlanIt.Domain.Common.Enums;
@@ -19,6 +19,17 @@ public class AttractionController(
     IMapper mapper
     ) : ControllerBase
 {
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> GetAttractions(Guid scheduleId)
+    {
+        var query = new GetAttractionByScheduleIdQuery(scheduleId);
+        
+        var results = await mediator.Send(query);
+        
+        return Ok(results.Select(mapper.Map<AttractionResponse>));
+    }
+    
     [HttpPost]
     [Authorize(Roles = nameof(UserRole.ADMIN))]
     public async Task<IActionResult> CreateAttraction(

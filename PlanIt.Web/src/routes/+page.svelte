@@ -55,6 +55,8 @@
 	}
 </script>
 
+<svelte:head><title>Expeditions — PlanIt</title></svelte:head>
+
 <div class="relative min-h-screen overflow-hidden bg-[#04060f]">
 	<!-- Nebula blobs -->
 	<div
