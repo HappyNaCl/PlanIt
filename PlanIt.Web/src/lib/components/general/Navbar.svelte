@@ -1,25 +1,26 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { LogOut, User, CalendarDays, BookMarked } from '@lucide/svelte';
-	import { getAuth, clearAuth } from '$lib/stores/auth.svelte';
-	import { api } from '$lib/services/api';
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { page } from "$app/state";
+	import { LogOut, User, CalendarDays, BookMarked, LayoutDashboardIcon } from "@lucide/svelte";
+	import { getAuth, clearAuth } from "$lib/stores/auth.svelte";
+	import { api } from "$lib/services/api";
 
 	const auth = getAuth();
 
 	async function logout() {
 		try {
-			await api.post('/auth/logout');
+			await api.post("/auth/logout");
 		} finally {
 			clearAuth();
-			goto(resolve('/auth/login'));
+			goto(resolve("/auth/login"));
 		}
 	}
 
 	const navLinks = [
-		{ label: 'Schedules', href: resolve('/'), icon: CalendarDays },
-		{ label: 'My Plans', href: resolve('/plans'), icon: BookMarked }
+		{ adminOnly: true, label: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
+		{ adminOnly: false, label: "Schedules", href: "/", icon: CalendarDays },
+		{ adminOnly: false, label: "My Plans", href: "/plans", icon: BookMarked }
 	];
 </script>
 
@@ -35,7 +36,14 @@
 				stroke-width="1.5"
 			>
 				<circle cx="12" cy="12" r="4" />
-				<ellipse cx="12" cy="12" rx="10" ry="4" transform="rotate(-30 12 12)" stroke-dasharray="3 2" />
+				<ellipse
+					cx="12"
+					cy="12"
+					rx="10"
+					ry="4"
+					transform="rotate(-30 12 12)"
+					stroke-dasharray="3 2"
+				/>
 				<path d="M12 2v2M12 20v2M2 12h2M20 12h2" stroke-linecap="round" />
 			</svg>
 			<span class="text-sm font-bold tracking-widest text-white uppercase">PlanIt</span>
@@ -58,17 +66,20 @@
 	<!-- Nav links row -->
 	<div class="mx-auto max-w-4xl px-6">
 		<div class="flex border-t border-white/5">
-			{#each navLinks as link}
+			{#each navLinks as link, i (i)}
 				{@const active = page.url.pathname === link.href}
-				<a
-					href={link.href}
-					class="flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors {active
-						? 'border-blue-400 text-blue-400'
-						: 'border-transparent text-white/40 hover:text-white/70'}"
-				>
-					<link.icon class="h-3.5 w-3.5" />
-					{link.label}
-				</a>
+				{@const canShow = !link.adminOnly || auth.user?.role === 'ADMIN'}
+				{#if canShow}
+					<a
+						href={resolve(link.href)}
+						class="flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors {active
+							? 'border-blue-400 text-blue-400'
+							: 'border-transparent text-white/40 hover:text-white/70'}"
+					>
+						<link.icon class="h-3.5 w-3.5" />
+						{link.label}
+					</a>
+				{/if}
 			{/each}
 		</div>
 	</div>
