@@ -48,6 +48,26 @@ public class CachedAttractionRepository(
         return result;
     }
 
+    public async Task<Attraction> GetById(Guid attractionId)
+    {
+        var key = IdKey(attractionId);
+        var json = await cache.StringGetAsync(key);
+
+        if (!json.IsNullOrEmpty)
+        {
+            var cached = JsonSerializer.Deserialize<Attraction>(json!, Json);
+            if (cached is not null)
+            {
+                await cache.KeyExpireAsync(key, Ttl);
+                return cached;
+            }
+        }
+
+        var result = await inner.GetById(attractionId);
+        await cache.StringSetAsync(key, JsonSerializer.Serialize(result, Json), Ttl);
+        return result;
+    }
+
     public async Task<List<Attraction>> GetByScheduleId(Guid scheduleId)
     {
         var cachedIds = await cache.SetMembersAsync(ScheduleKey(scheduleId));

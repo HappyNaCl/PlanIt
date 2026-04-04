@@ -2,6 +2,7 @@ using PlanIt.Api;
 using PlanIt.Api.Middlewares;
 using PlanIt.Application;
 using PlanIt.Infrastructure;
+using PlanIt.Infrastructure.Realtime;
 using PlanIt.Infrastructure.Seeder;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +25,7 @@ var app = builder.Build();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.UseCors("AllowFrontend");
-    // app.UseAuthentication();
+    // app.UseAuthenticatiowait n();
     app.UseAuthorization();
 
     if (args.Contains("--seed"))
@@ -32,5 +33,6 @@ var app = builder.Build();
 
     app.UseHttpsRedirection();
     app.MapControllers();
+    app.MapHub<AttractionHub>("/hubs/attractions");
     app.Run();
 }

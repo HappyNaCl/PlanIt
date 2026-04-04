@@ -8,11 +8,21 @@ using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Datetime;
 using PlanIt.Application.Common.Interfaces.FileUploader;
 using PlanIt.Application.Common.Interfaces.Persistence;
+using PlanIt.Application.Common.Interfaces.Locking;
+using PlanIt.Application.Common.Interfaces.Messaging;
+using PlanIt.Application.Common.Interfaces.Realtime;
+using PlanIt.Application.Common.Interfaces.Stores;
 using PlanIt.Infrastructure.Authentication;
 using PlanIt.Infrastructure.CachedPersistence;
 using PlanIt.Infrastructure.Datetime;
 using PlanIt.Infrastructure.FileUploader;
+using PlanIt.Infrastructure.Locking;
+using PlanIt.Infrastructure.Messaging;
+using PlanIt.Infrastructure.Messaging.Consumers;
+using PlanIt.Infrastructure.Realtime;
+using RabbitMQ.Client;
 using PlanIt.Infrastructure.Persistence;
+using PlanIt.Infrastructure.Stores;
 using StackExchange.Redis;
 
 namespace PlanIt.Infrastructure;
@@ -58,6 +68,32 @@ public static class DependencyInjection
         );
 
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+
+        services.AddScoped<RegistrantRepository>();
+        services.AddScoped<IRegistrantRepository>(sp =>
+            new CachedRegistrantRepository(
+                sp.GetRequiredService<RegistrantRepository>(),
+                sp.GetRequiredService<IDatabase>()
+            )
+        );
+        services.AddScoped<IIdempotencyStore<string>, RedisIdempotencyStore>();
+        services.AddSingleton<IDistributedLock, RedisDistributedLock>();
+
+        services.Configure<RabbitMqSettings>(config.GetSection(RabbitMqSettings.SectionName));
+        services.AddSingleton<IConnection>(_ =>
+        {
+            var rabbitConfig = config.GetSection(RabbitMqSettings.SectionName);
+            var factory = new ConnectionFactory
+            {
+                HostName = rabbitConfig["Host"] ?? "localhost",
+                UserName = rabbitConfig["Username"] ?? "guest",
+                Password = rabbitConfig["Password"] ?? "guest"
+            };
+            return factory.CreateConnectionAsync().GetAwaiter().GetResult();
+        });
+        services.AddSingleton<IEventBus, RabbitMqEventBus>();
+        services.AddSingleton<IAttractionNotifier, AttractionNotifier>();
+        services.AddHostedService<JoinAttractionConsumer>();
 
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();
         services.AddScoped<AccessTokenService>();

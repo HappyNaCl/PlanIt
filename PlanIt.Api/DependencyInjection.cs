@@ -37,6 +37,8 @@ public static class DependencyInjection
                 options.JsonSerializerOptions.DefaultIgnoreCondition =
                     JsonIgnoreCondition.WhenWritingNull);
 
+        services.AddSignalR();
+
         services.AddAuthorizationBuilder()
             .AddPolicy("AdminPolicy", policy =>
                 policy.RequireRole(nameof(UserRole.ADMIN)));

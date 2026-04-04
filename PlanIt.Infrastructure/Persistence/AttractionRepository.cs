@@ -34,6 +34,14 @@ public class AttractionRepository(
         return attraction;  
     }
 
+    public async Task<Attraction> GetById(Guid attractionId)
+    {
+        return await context.Attractions
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == attractionId)
+            ?? throw new AttractionNotFoundException(attractionId);
+    }
+
     public async Task<List<Attraction>> GetByScheduleId(Guid scheduleId)
     {
         return await context.Attractions
