@@ -14,14 +14,20 @@ public class GetAttractionByScheduleIdQueryHandler(
     {
         var attractions = await attractionRepository.GetByScheduleId(request.ScheduleId);
 
-        return attractions.Select(a => new AttractionResult(
-            a.Id,
-            a.ScheduleId,
-            a.Name,
-            a.Description,
-            $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
-            a.Capacity,
-            a.Capacity - a.Registrants.Count
-        )).ToList();
+        var results = new List<AttractionResult>();
+        foreach (var a in attractions)
+        {
+            var remaining = await attractionRepository.GetRemainingCapacity(a.Id);
+            results.Add(new AttractionResult(
+                a.Id,
+                a.ScheduleId,
+                a.Name,
+                a.Description,
+                $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
+                a.Capacity,
+                remaining
+            ));
+        }
+        return results;
     }
 }

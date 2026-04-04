@@ -6,10 +6,10 @@ public class Attraction : Entity<Guid>
 {
     public Attraction() : base(Guid.NewGuid()) { }
 
-    public string Name { get; init; } = null!;
-    public string Description { get; init; } = null!;
-    public string ImageKey { get; init; } = null!;
-    public int Capacity { get; init; }
+    public string Name { get; set; } = null!;
+    public string Description { get; set; } = null!;
+    public string ImageKey { get; set; } = null!;
+    public int Capacity { get; set; }
 
     public Guid ScheduleId { get; init; }
     public Schedule Schedule { get; private set; } = null!;

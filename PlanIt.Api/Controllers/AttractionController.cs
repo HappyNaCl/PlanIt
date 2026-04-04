@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlanIt.Application.Attractions.Commands.CreateAttraction;
 using PlanIt.Application.Attractions.Commands.DeleteAttraction;
+using PlanIt.Application.Attractions.Commands.UpdateAttraction;
 using PlanIt.Application.Attractions.Queries.GetByScheduleId;
 using PlanIt.Contracts.Attraction.Request;
 using PlanIt.Contracts.Attraction.Response;
@@ -35,14 +36,47 @@ public class AttractionController(
     public async Task<IActionResult> CreateAttraction(
         Guid scheduleId,
         [FromForm] CreateAttractionRequest request,
-        IFormFile imageFile)
+        IFormFile? imageFile)
     {
+        if (imageFile == null || imageFile.Length == 0)
+            return BadRequest("Image file is required.");
+        
         var image = new ImageFile(
             imageFile.OpenReadStream(),
             imageFile.FileName,
             imageFile.ContentType);
 
         var command = new CreateAttractionCommand(
+            scheduleId,
+            request.Name,
+            request.Description,
+            image,
+            request.Capacity);
+
+        var result = await mediator.Send(command);
+
+        return Ok(mapper.Map<AttractionResponse>(result));
+    }
+
+    [HttpPut("{attractionId:guid}")]
+    [Authorize(Roles = nameof(UserRole.ADMIN))]
+    public async Task<IActionResult> UpdateAttraction(
+        Guid scheduleId,
+        Guid attractionId,
+        [FromForm] UpdateAttractionRequest request,
+        IFormFile? imageFile)
+    {
+        ImageFile? image = null;
+        if (imageFile is { Length: > 0 })
+        {
+            image = new ImageFile(
+                imageFile.OpenReadStream(),
+                imageFile.FileName,
+                imageFile.ContentType);
+        }
+
+        var command = new UpdateAttractionCommand(
+            attractionId,
             scheduleId,
             request.Name,
             request.Description,

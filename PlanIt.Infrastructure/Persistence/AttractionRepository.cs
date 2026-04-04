@@ -27,6 +27,13 @@ public class AttractionRepository(
         return attraction;
     }
 
+    public async Task<Attraction> Update(Attraction attraction)
+    {
+        context.Attractions.Update(attraction);
+        await context.SaveChangesAsync(CancellationToken.None);
+        return attraction;  
+    }
+
     public async Task<List<Attraction>> GetByScheduleId(Guid scheduleId)
     {
         return await context.Attractions
@@ -34,6 +41,16 @@ public class AttractionRepository(
             .Include(a => a.Registrants)
             .Where(a => a.ScheduleId == scheduleId)
             .ToListAsync();
+    }
+
+    public async Task<Attraction> GetByIdForUpdate(Guid attractionId)
+    {
+        var attraction = await context.Attractions
+            .AsNoTracking()
+            .Include(a => a.Registrants)
+            .FirstOrDefaultAsync(a => a.Id == attractionId) ?? throw new AttractionNotFoundException(attractionId);
+
+        return attraction;
     }
 
     public async Task<int> GetRemainingCapacity(Guid attractionId)

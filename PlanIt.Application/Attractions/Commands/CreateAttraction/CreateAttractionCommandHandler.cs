@@ -14,8 +14,6 @@ public class CreateAttractionCommandHandler(
 {
     public async Task<AttractionResult> Handle(CreateAttractionCommand request, CancellationToken cancellationToken)
     {
-        await scheduleRepository.GetById(request.ScheduleId);
-
         var imageKey = await fileUploader.UploadAsync(
             request.ImageFile.Content,
             request.ImageFile.FileName,

@@ -1,11 +1,13 @@
 using FluentValidation;
 
-namespace PlanIt.Application.Attractions.Commands.CreateAttraction;
+namespace PlanIt.Application.Attractions.Commands.UpdateAttraction;
 
-public class CreateAttractionCommandValidator : AbstractValidator<CreateAttractionCommand>
+public class UpdateAttractionCommandValidator : AbstractValidator<UpdateAttractionCommand>
 {
-    public CreateAttractionCommandValidator()
+    public UpdateAttractionCommandValidator()
     {
+        RuleFor(x => x.AttractionId)
+            .NotEmpty().WithMessage("AttractionId is required.");
         RuleFor(x => x.ScheduleId)
             .NotEmpty().WithMessage("ScheduleId is required.");
         RuleFor(x => x.Name)
@@ -15,7 +17,5 @@ public class CreateAttractionCommandValidator : AbstractValidator<CreateAttracti
             .MaximumLength(150).WithMessage("Description must not exceed 150 characters.");
         RuleFor(x => x.Capacity)
             .GreaterThan(0).WithMessage("Capacity must be greater than 0.");
-        RuleFor(x => x.ImageFile)
-            .NotNull().WithMessage("ImageFile is required.");
     }
 }

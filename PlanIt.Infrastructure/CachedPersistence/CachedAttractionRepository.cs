@@ -38,6 +38,16 @@ public class CachedAttractionRepository(
         return result;
     }
 
+    public async Task<Attraction> Update(Attraction attraction)
+    {
+        var result = await inner.Update(attraction);
+        var remaining = await inner.GetRemainingCapacity(result.Id);
+
+        await cache.KeyDeleteAsync(IdKey(result.Id));
+        await cache.StringSetAsync(RemainingCapacityKey(result.Id), remaining, Ttl);
+        return result;
+    }
+
     public async Task<List<Attraction>> GetByScheduleId(Guid scheduleId)
     {
         var cachedIds = await cache.SetMembersAsync(ScheduleKey(scheduleId));
@@ -77,6 +87,11 @@ public class CachedAttractionRepository(
         return result;
     }
 
+    public Task<Attraction> GetByIdForUpdate(Guid attractionId)
+    {
+        return inner.GetByIdForUpdate(attractionId);
+    }
+
     public async Task<int> GetRemainingCapacity(Guid attractionId)
     {
         var key = RemainingCapacityKey(attractionId);
@@ -97,6 +112,9 @@ public class CachedAttractionRepository(
     {
         foreach (var attraction in attractions)
         {
+            var remainingCapacity = attraction.Capacity - attraction.Registrants.Count;
+            attraction.Registrants.Clear();
+
             await cache.StringSetAsync(
                 IdKey(attraction.Id),
                 JsonSerializer.Serialize(attraction, Json),
@@ -106,7 +124,7 @@ public class CachedAttractionRepository(
 
             await cache.StringSetAsync(
                 RemainingCapacityKey(attraction.Id),
-                attraction.Capacity - attraction.Registrants.Count,
+                remainingCapacity,
                 Ttl);
         }
 

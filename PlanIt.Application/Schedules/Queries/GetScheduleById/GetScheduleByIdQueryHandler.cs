@@ -16,6 +16,20 @@ public class GetScheduleByIdQueryHandler(
         var schedule = await scheduleRepository.GetById(request.ScheduleId);
         var attractions = await attractionRepository.GetByScheduleId(schedule.Id);
         
+        var attractionDtos = new List<AttractionResultDto>();
+        foreach (var a in attractions)
+        {
+            var remaining = await attractionRepository.GetRemainingCapacity(a.Id);
+            attractionDtos.Add(new AttractionResultDto(
+                a.Id,
+                a.Name,
+                a.Description,
+                $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
+                a.Capacity,
+                remaining
+            ));
+        }
+
         return new DetailedScheduleResult(
             schedule.Id,
             schedule.Name,
@@ -23,14 +37,7 @@ public class GetScheduleByIdQueryHandler(
             schedule.Location,
             schedule.StartTime,
             schedule.EndTime,
-            attractions.Select(a => new AttractionResultDto(
-                    a.Id,
-                    a.Name,
-                    a.Description,
-                    $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
-                    a.Capacity,
-                    a.Capacity - a.Registrants.Count
-                )).ToList()
+            attractionDtos
         );
     }
 }
