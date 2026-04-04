@@ -16,6 +16,8 @@
 	import AttractionCardSkeleton from "$lib/components/attraction/AttractionCardSkeleton.svelte";
 	import { MapPin, Clock, ChevronLeft, Waypoints, Pencil, Trash2, Plus } from "@lucide/svelte";
 	import toast from "svelte-french-toast";
+	import { PUBLIC_BACKEND_URL } from "$env/static/public";
+	import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr";
 
 	$effect(() => {
 		if (browser && isInitialized() && !isAuthenticated()) {
@@ -26,6 +28,51 @@
 	const id = $derived($page.params.id);
 	const isAdmin = $derived(getAuth().user?.role === "ADMIN");
 	const queryClient = useQueryClient();
+
+	$effect(() => {
+		if (!browser || !id) return;
+
+		const conn = new HubConnectionBuilder()
+			.withUrl(`${PUBLIC_BACKEND_URL}/hubs/attractions`, {
+				accessTokenFactory: () => getAuth().accessToken ?? ""
+			})
+			.configureLogging(LogLevel.Warning)
+			.withAutomaticReconnect()
+			.build();
+
+		conn.on(
+			"CapacityUpdated",
+			({ attractionId, remaining }: { attractionId: string; remaining: number }) => {
+				const current = queryClient.getQueryData<Attraction[]>(["attractions", id]);
+				if (!current) return;
+				queryClient.setQueryData<Attraction[]>(
+					["attractions", id],
+					current.map((a) => (a.id === attractionId ? { ...a, remainingCapacity: remaining } : a))
+				);
+			}
+		);
+
+		conn
+			.start()
+			.then(() => conn.invoke<{ attractionId: string; remaining: number }[]>("JoinSchedule", id))
+			.then((capacities) => {
+				const current = queryClient.getQueryData<Attraction[]>(["attractions", id]);
+				if (!current) return;
+				queryClient.setQueryData<Attraction[]>(
+					["attractions", id],
+					current.map((a) => {
+						const cap = capacities.find((c) => c.attractionId === a.id);
+						return cap ? { ...a, remainingCapacity: cap.remaining } : a;
+					})
+				);
+			})
+			.catch(console.error);
+
+		return () => {
+			conn.invoke("LeaveSchedule", id).catch(() => {});
+			conn.stop();
+		};
+	});
 
 	async function fetchSchedule(scheduleId: string) {
 		try {
@@ -210,6 +257,7 @@
 										{#each attractionsResult.data as attraction, i (attraction.id)}
 											<AttractionCard
 												{attraction}
+												scheduleId={id!}
 												index={i}
 												onJoin={() => queryClient.invalidateQueries(["attractions", id])}
 											/>

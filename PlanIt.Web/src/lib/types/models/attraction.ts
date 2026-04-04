@@ -6,4 +6,5 @@ export interface Attraction {
 	imageUrl: string;
 	capacity: number;
 	remainingCapacity: number;
+	hasJoined?: boolean;
 }

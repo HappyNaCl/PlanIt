@@ -15,4 +15,5 @@ public record AttractionDto(
     string Description,
     string ImageUrl,
     int Capacity,
-    int RemainingCapacity);
+    int RemainingCapacity,
+    bool HasJoined);

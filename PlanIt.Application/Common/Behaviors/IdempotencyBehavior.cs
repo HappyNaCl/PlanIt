@@ -10,7 +10,7 @@ public class IdempotencyBehavior<TRequest, TResponse>(
     ) : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private static readonly TimeSpan Expiry = TimeSpan.FromHours(24);
+    private static readonly TimeSpan Expiry = TimeSpan.FromMinutes(30);
 
     public async Task<TResponse> Handle(
         TRequest request,

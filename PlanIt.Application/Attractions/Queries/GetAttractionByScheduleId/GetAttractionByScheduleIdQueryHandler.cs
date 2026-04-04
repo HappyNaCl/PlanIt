@@ -3,29 +3,31 @@ using PlanIt.Application.Attractions.Results;
 using PlanIt.Application.Common.Interfaces.FileUploader;
 using PlanIt.Application.Common.Interfaces.Persistence;
 
-namespace PlanIt.Application.Attractions.Queries.GetByScheduleId;
+namespace PlanIt.Application.Attractions.Queries.GetAttractionByScheduleId;
 
 public class GetAttractionByScheduleIdQueryHandler(
     IAttractionRepository attractionRepository,
+    IRegistrantRepository registrantRepository,
     IFileUploader fileUploader
-    ) : IRequestHandler<GetAttractionByScheduleIdQuery, ICollection<AttractionResult>>
+    ) : IRequestHandler<GetAttractionByScheduleIdQuery, ICollection<DetailedAttractionResult>>
 {
-    public async Task<ICollection<AttractionResult>> Handle(GetAttractionByScheduleIdQuery request, CancellationToken cancellationToken)
+    public async Task<ICollection<DetailedAttractionResult>> Handle(GetAttractionByScheduleIdQuery request, CancellationToken cancellationToken)
     {
         var attractions = await attractionRepository.GetByScheduleId(request.ScheduleId);
-
-        var results = new List<AttractionResult>();
+        var joinedIds = await registrantRepository.GetRegisteredAttractionIds(request.UserId);
+        var results = new List<DetailedAttractionResult>();
         foreach (var a in attractions)
         {
             var remaining = await attractionRepository.GetRemainingCapacity(a.Id);
-            results.Add(new AttractionResult(
+            results.Add(new DetailedAttractionResult(
                 a.Id,
                 a.ScheduleId,
                 a.Name,
                 a.Description,
                 $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
                 a.Capacity,
-                remaining
+                remaining,
+                joinedIds.Contains(a.Id)
             ));
         }
         return results;

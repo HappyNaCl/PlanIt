@@ -8,36 +8,22 @@ namespace PlanIt.Application.Schedules.Queries.GetScheduleById;
 public class GetScheduleByIdQueryHandler(
     IScheduleRepository scheduleRepository,
     IAttractionRepository attractionRepository,
+    IRegistrantRepository registrantRepository,
     IFileUploader fileUploader
-    ) : IRequestHandler<GetScheduleByIdQuery, DetailedScheduleResult>
+    ) : IRequestHandler<GetScheduleByIdQuery, ScheduleResult>
 {
-    public async Task<DetailedScheduleResult> Handle(GetScheduleByIdQuery request, CancellationToken cancellationToken)
+    public async Task<ScheduleResult> Handle(GetScheduleByIdQuery request, CancellationToken cancellationToken)
     {
         var schedule = await scheduleRepository.GetById(request.ScheduleId);
-        var attractions = await attractionRepository.GetByScheduleId(schedule.Id);
         
-        var attractionDtos = new List<AttractionResultDto>();
-        foreach (var a in attractions)
-        {
-            var remaining = await attractionRepository.GetRemainingCapacity(a.Id);
-            attractionDtos.Add(new AttractionResultDto(
-                a.Id,
-                a.Name,
-                a.Description,
-                $"{fileUploader.GetEndpoint()}/{a.ImageKey}",
-                a.Capacity,
-                remaining
-            ));
-        }
-
-        return new DetailedScheduleResult(
+        return new ScheduleResult(
             schedule.Id,
             schedule.Name,
             schedule.Description,
             schedule.Location,
             schedule.StartTime,
             schedule.EndTime,
-            attractionDtos
+            schedule.Attractions.Count
         );
     }
 }

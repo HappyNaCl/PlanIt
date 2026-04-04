@@ -4,7 +4,7 @@ using PlanIt.Application.Common.Interfaces.Persistence;
 using PlanIt.Application.Registrants.Messages;
 using PlanIt.Domain.Common.Exceptions.Registrants;
 
-namespace PlanIt.Application.Registrants.Commands;
+namespace PlanIt.Application.Registrants.Commands.JoinAttraction;
 
 public class JoinAttractionCommandHandler(
     IAttractionRepository attractionRepository,

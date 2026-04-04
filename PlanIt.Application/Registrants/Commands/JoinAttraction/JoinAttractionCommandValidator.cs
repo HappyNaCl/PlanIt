@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace PlanIt.Application.Registrants.Commands;
+namespace PlanIt.Application.Registrants.Commands.JoinAttraction;
 
 public class JoinAttractionCommandValidator : AbstractValidator<JoinAttractionCommand>
 {

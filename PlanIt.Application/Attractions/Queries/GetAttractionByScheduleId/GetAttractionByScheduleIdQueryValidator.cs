@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace PlanIt.Application.Attractions.Queries.GetByScheduleId;
+namespace PlanIt.Application.Attractions.Queries.GetAttractionByScheduleId;
 
 public class GetAttractionByScheduleIdQueryValidator : AbstractValidator<GetAttractionByScheduleIdQuery>
 {

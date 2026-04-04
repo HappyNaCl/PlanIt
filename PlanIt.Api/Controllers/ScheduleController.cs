@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -35,8 +36,7 @@ public class ScheduleController(
     [Authorize]
     public async Task<IActionResult> GetScheduleById(Guid id)
     {
-        var query = new GetScheduleByIdQuery(id);
-        var result = await mediator.Send(query);
+        var result = await mediator.Send(new GetScheduleByIdQuery(id));
         return Ok(mapper.Map<DetailedSchedule>(result));
     }
 

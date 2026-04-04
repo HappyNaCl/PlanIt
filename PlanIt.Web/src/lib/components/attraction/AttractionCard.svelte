@@ -1,27 +1,70 @@
 <script lang="ts">
-	import { api } from "$lib/services/api";
-	import { UserPlus } from "@lucide/svelte";
-	import toast from "svelte-french-toast";
+	import { api, type ApiError } from "$lib/services/api";
+	import { UserPlus, UserMinus } from "@lucide/svelte";
 	import type { Attraction } from "$lib/types/models/attraction";
+	import JoinAttractionDialog from "./JoinAttractionDialog.svelte";
+	import type { AxiosError } from "axios";
 
 	type Props = {
 		attraction: Attraction;
+		scheduleId: string;
 		index: number;
 		onJoin: () => void;
 	};
 
-	let { attraction, index, onJoin }: Props = $props();
+	let { attraction, scheduleId, index, onJoin }: Props = $props();
 
 	const full = $derived(attraction.remainingCapacity === 0);
 	const pct = $derived(Math.round((attraction.remainingCapacity / attraction.capacity) * 100));
 
+	let dialogOpen = $state(false);
+	let joinSuccess = $state(false);
+	let joinReason = $state<string | undefined>(undefined);
+	let joining = $state(false);
+	let leaving = $state(false);
+	let joined = $state(attraction.hasJoined ?? false);
+
 	async function join() {
+		joining = true;
+		const idempotencyKey = crypto.randomUUID();
 		try {
-			await api.post(`/attractions/${attraction.id}/join`, {});
-			toast.success("Spot reserved!");
+			await api.post(
+				`/schedules/${scheduleId}/attractions/${attraction.id}/registrants`,
+				{},
+				{ headers: { "Idempotency-Key": idempotencyKey } }
+			);
+			joinSuccess = true;
+			joinReason = undefined;
+			joined = true;
+			dialogOpen = true;
 			onJoin();
-		} catch {
-			toast.error("Failed to reserve spot");
+		} catch (err) {
+			const axiosErr = err as AxiosError<ApiError>;
+			const errors = axiosErr.response?.data?.error;
+			const reason = errors ? Object.values(errors).flat()[0] : undefined;
+			joinSuccess = false;
+			joinReason = reason;
+			dialogOpen = true;
+		} finally {
+			joining = false;
+		}
+	}
+
+	async function leave() {
+		leaving = true;
+		try {
+			await api.delete(`/schedules/${scheduleId}/attractions/${attraction.id}/registrants`);
+			joined = false;
+			onJoin();
+		} catch (err) {
+			const axiosErr = err as AxiosError<ApiError>;
+			const errors = axiosErr.response?.data?.error;
+			const reason = errors ? Object.values(errors).flat()[0] : undefined;
+			joinSuccess = false;
+			joinReason = reason;
+			dialogOpen = true;
+		} finally {
+			leaving = false;
 		}
 	}
 </script>
@@ -55,18 +98,44 @@
 					>
 						{attraction.remainingCapacity}/{attraction.capacity} spots
 					</span>
-					<button
-						onclick={join}
-						disabled={full}
-						class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition {full
-							? 'cursor-not-allowed border-white/5 text-white/20'
-							: 'border-blue-500/30 bg-blue-500/10 text-blue-300 hover:border-blue-400/50 hover:bg-blue-500/20'}"
-					>
-						<UserPlus class="h-3.5 w-3.5" />
-						{full ? "Fully Booked" : "Join"}
-					</button>
+
+					{#if joined}
+						<button
+							onclick={leave}
+							disabled={leaving}
+							class="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:border-red-400/50 hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+						>
+							{#if leaving}
+								<div
+									class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-red-300/30 border-t-red-300"
+								></div>
+							{:else}
+								<UserMinus class="h-3.5 w-3.5" />
+							{/if}
+							Cancel
+						</button>
+					{:else}
+						<button
+							onclick={join}
+							disabled={full || joining}
+							class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition {full
+								? 'cursor-not-allowed border-white/5 text-white/20'
+								: 'border-blue-500/30 bg-blue-500/10 text-blue-300 hover:border-blue-400/50 hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50'}"
+						>
+							{#if joining}
+								<div
+									class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-300/30 border-t-blue-300"
+								></div>
+							{:else}
+								<UserPlus class="h-3.5 w-3.5" />
+							{/if}
+							{full ? "Fully Booked" : "Join"}
+						</button>
+					{/if}
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+<JoinAttractionDialog bind:open={dialogOpen} success={joinSuccess} reason={joinReason} />

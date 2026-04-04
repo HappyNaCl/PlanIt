@@ -24,11 +24,23 @@ public class RegistrantRepository(IApplicationDbContext context) : IRegistrantRe
 
     public async Task RemoveAsync(Guid userId, Guid attractionId)
     {
-        var registrant = await context.Registrants
-            .FirstOrDefaultAsync(r => r.UserId == userId && r.AttractionId == attractionId)
-            ?? throw new NotRegisteredException(userId, attractionId);
+        var deleted = await context.Registrants
+            .IgnoreQueryFilters()
+            .Where(r => r.UserId == userId && r.AttractionId == attractionId)
+            .ExecuteDeleteAsync();
 
-        context.Registrants.Remove(registrant);
-        await context.SaveChangesAsync(CancellationToken.None);
+        if (deleted == 0)
+            throw new NotRegisteredException(userId, attractionId);
+    }
+
+    public async Task<ISet<Guid>> GetRegisteredAttractionIds(Guid userId)
+    {
+        var ids = await context.Registrants
+            .AsNoTracking()
+            .Where(r => r.UserId == userId)
+            .Select(r => r.AttractionId)
+            .ToListAsync();
+
+        return ids.ToHashSet();
     }
 }

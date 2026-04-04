@@ -64,6 +64,7 @@ public class JoinAttractionConsumer(
 
         try
         {
+            Console.WriteLine($"[JoinAttractionConsumer]: {message.UserId} JOINING {message.AttractionId}");
             await registrantRepo.AddAsync(new Registrant
             {
                 UserId = message.UserId,
@@ -73,6 +74,7 @@ public class JoinAttractionConsumer(
         catch (AlreadyRegisteredException)
         {
             // treat as success — idempotent
+            Console.WriteLine($"[JoinAttractionConsumer]: IDEMPOTENT {message.UserId} JOINING {message.AttractionId}");
         }
 
         var attraction = await attractionRepo.GetById(message.AttractionId);

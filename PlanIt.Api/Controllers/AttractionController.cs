@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -5,7 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using PlanIt.Application.Attractions.Commands.CreateAttraction;
 using PlanIt.Application.Attractions.Commands.DeleteAttraction;
 using PlanIt.Application.Attractions.Commands.UpdateAttraction;
-using PlanIt.Application.Attractions.Queries.GetByScheduleId;
+using PlanIt.Application.Attractions.Queries.GetAttractionByScheduleId;
+using PlanIt.Application.Attractions.Results;
 using PlanIt.Contracts.Attraction.Request;
 using PlanIt.Contracts.Attraction.Response;
 using PlanIt.Domain.Common.Enums;
@@ -24,11 +26,12 @@ public class AttractionController(
     [Authorize]
     public async Task<IActionResult> GetAttractions(Guid scheduleId)
     {
-        var query = new GetAttractionByScheduleIdQuery(scheduleId);
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var query = new GetAttractionByScheduleIdQuery(scheduleId, userId);
         
         var results = await mediator.Send(query);
         
-        return Ok(results.Select(mapper.Map<AttractionResponse>));
+        return Ok(results.Select(mapper.Map<DetailedAttractionResult>));
     }
     
     [HttpPost]

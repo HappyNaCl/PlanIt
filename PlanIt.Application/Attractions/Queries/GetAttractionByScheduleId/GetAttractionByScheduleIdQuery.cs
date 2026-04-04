@@ -1,7 +1,8 @@
 using MediatR;
 using PlanIt.Application.Attractions.Results;
 
-namespace PlanIt.Application.Attractions.Queries.GetByScheduleId;
+namespace PlanIt.Application.Attractions.Queries.GetAttractionByScheduleId;
 
 public record GetAttractionByScheduleIdQuery(
-    Guid ScheduleId) : IRequest<ICollection<AttractionResult>>;
+    Guid ScheduleId,
+    Guid UserId) : IRequest<ICollection<DetailedAttractionResult>>;
