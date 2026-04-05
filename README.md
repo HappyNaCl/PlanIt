@@ -1,7 +1,8 @@
 # PlanIt
 
-This is a reworked version of my technical test submission for the SLC Research and Development Team
-An online attraction registration platform built for internal use such as company outings. Users browse scheduled attractions, register for one, and receive real-time confirmation. Admins manage schedules, attractions, and monitor live registration counts from a dedicated dashboard.
+This is a reworked version of my **technical test submission** for the **SLC Research and Development Team**.
+
+An **online attraction registration platform** built for internal use such as **company outings**. Users browse scheduled attractions, register for one, and receive real-time confirmation. Admins manage schedules, attractions, and monitor live registration counts from a dedicated dashboard.
 
 ---
 
