@@ -12,7 +12,7 @@ public class S3Uploader(
 {
     private readonly S3Settings _settings = settings.Value;
 
-    public string GetEndpoint() => $"{_settings.Endpoint}/{_settings.BucketName}/";
+    public string GetEndpoint() => $"{_settings.PublicEndpoint}/{_settings.BucketName}/";
 
     public async Task<string> UploadAsync(Stream stream, string fileName, string contentType, string prefix)
     {

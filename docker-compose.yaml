@@ -10,7 +10,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-  
   redis:
     container_name: planit-redis
     image: redis:latest
@@ -19,7 +18,6 @@ services:
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis_data:/data
-
   rustfs:
     image: rustfs/rustfs:latest
     container_name: planit-rustfs
@@ -32,7 +30,6 @@ services:
     environment:
       - RUSTFS_ACCESS_KEY=planit
       - RUSTFS_SECRET_KEY=planit
-  
   rabbitmq:
     image: rabbitmq:3
     container_name: planit-rabbitmq
@@ -44,6 +41,49 @@ services:
       RABBITMQ_DEFAULT_PASS: planit
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  api:
+    image: planit-api
+    container_name: planit-api
+    build:
+      context: .
+      dockerfile: ./PlanIt.Api/Dockerfile
+    ports:
+      - "5254:8080"
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      rustfs:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=planit;Username=planit;Password=planit
+      - ConnectionStrings__Redis=redis:6379
+      - S3__Endpoint=http://rustfs:9000
+      - S3__PublicEndpoint=http://localhost:9000
+      - RabbitMQ__Host=rabbitmq
+  web:
+    image: planit-web
+    container_name: planit-web
+    build:
+      context: ./PlanIt.Web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:3000"
+    depends_on:
+      - api
+    environment:
+      - PUBLIC_BACKEND_URL=http://localhost:5254
 
 volumes:
   postgres_data:
