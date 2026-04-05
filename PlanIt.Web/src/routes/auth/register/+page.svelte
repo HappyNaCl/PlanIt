@@ -2,6 +2,11 @@
 	import { resolve } from '$app/paths';
 	import Brand from '$lib/components/general/Brand.svelte';
 	import AuthFooter from '$lib/components/general/AuthFooter.svelte';
+	import toast from 'svelte-french-toast';
+	import { api } from '$lib/services/api';
+	import type { AuthResponse } from '$lib/types/responses/authResponse';
+	import type { User } from '$lib/types/models/user';
+	import { setAccessToken, setUser } from '$lib/stores/auth.svelte';
 
 	let username = $state('');
 	let email = $state('');
@@ -10,10 +15,27 @@
 
 	let passwordMismatch = $derived(confirmPassword.length > 0 && password !== confirmPassword);
 
+	async function register() {
+		const { data } = await api.post<AuthResponse>('/auth/register', {
+			email,
+			username,
+			password,
+			confirmPassword
+		});
+		setAccessToken(data.accessToken);
+
+		const { data: user } = await api.get<User>('/me');
+		setUser(user);
+	}
+
 	function handleSubmit(e: Event) {
 		e.preventDefault();
 		if (password !== confirmPassword) return;
-		// TODO: implement registration
+		toast.promise(register(), {
+			loading: 'Creating your account...',
+			success: 'Welcome to the universe!',
+			error: 'Registration failed. Please try again.'
+		});
 	}
 </script>
 

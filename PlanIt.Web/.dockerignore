@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.env.local
+.env.*.local
+.svelte-kit
+build
+.vite
+.eslintignore
+.prettierignore
+README.md
+.DS_Store
+dist
+coverage
+.vitest
+playwright
