@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PlanIt.Application.Me.Queries;
+using PlanIt.Application.Registrants.Queries.GetMyAttractions;
 using PlanIt.Contracts.Me.Response;
 
 namespace PlanIt.Api.Controllers;
@@ -31,5 +32,16 @@ public class MeController(
         var result = await mediator.Send(query);
 
         return Ok(mapper.Map<MeResponse>(result));
+    }
+
+    [HttpGet("attractions")]
+    [Authorize]
+    public async Task<IActionResult> GetMyAttractions()
+    {
+        var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        var result = await mediator.Send(new GetMyAttractionsQuery(userId));
+
+        return Ok(mapper.Map<ICollection<MyAttractionResponse>>(result));
     }
 }

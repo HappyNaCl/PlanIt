@@ -1,4 +1,6 @@
+using System.Text.Json;
 using PlanIt.Application.Common.Interfaces.Persistence;
+using PlanIt.Application.Registrants.Results;
 using PlanIt.Domain.Entities;
 using StackExchange.Redis;
 
@@ -10,9 +12,11 @@ public class CachedRegistrantRepository(
     ) : IRegistrantRepository
 {
     private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(10);
+    private static readonly TimeSpan PlansTtl = TimeSpan.FromSeconds(30);
 
     private static string RemainingCapacityKey(Guid attractionId) => $"attraction:remaining:{attractionId}";
     private static string UserRegistrationsKey(Guid userId) => $"user:registrations:{userId}";
+    private static string UserPlansKey(Guid userId) => $"user:plans:{userId}";
     private const string CountKey = "registrant:count";
 
     public async Task<Registrant> AddAsync(Registrant registrant)
@@ -33,6 +37,8 @@ public class CachedRegistrantRepository(
                 await cache.SetAddAsync(userKey, registrant.AttractionId.ToString());
                 await cache.KeyExpireAsync(userKey, Ttl);
             }
+
+            await cache.KeyDeleteAsync(UserPlansKey(registrant.UserId));
 
             return result;
         }
@@ -62,6 +68,8 @@ public class CachedRegistrantRepository(
                 await cache.SetRemoveAsync(userKey, attractionId.ToString());
                 await cache.KeyExpireAsync(userKey, Ttl);
             }
+
+            await cache.KeyDeleteAsync(UserPlansKey(userId));
         }
         catch
         {
@@ -91,6 +99,26 @@ public class CachedRegistrantRepository(
         }
 
         return ids;
+    }
+
+    public async Task<List<MyAttractionResult>> GetUserAttractionsWithDetails(Guid userId)
+    {
+        var key = UserPlansKey(userId);
+        var cached = await cache.StringGetAsync(key);
+
+        if (cached.HasValue)
+        {
+            var deserialized = JsonSerializer.Deserialize<List<MyAttractionResult>>(cached!);
+            if (deserialized is not null)
+            {
+                await cache.KeyExpireAsync(key, PlansTtl);
+                return deserialized;
+            }
+        }
+
+        var result = await inner.GetUserAttractionsWithDetails(userId);
+        await cache.StringSetAsync(key, JsonSerializer.Serialize(result), PlansTtl);
+        return result;
     }
 
     public async Task<int> CountAsync()
