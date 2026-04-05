@@ -23,16 +23,17 @@
 	let joining = $state(false);
 	let leaving = $state(false);
 	let joined = $state(attraction.hasJoined ?? false);
+	let idempotencyKey = $state(crypto.randomUUID());
 
 	async function join() {
 		joining = true;
-		const idempotencyKey = crypto.randomUUID();
 		try {
 			await api.post(
 				`/schedules/${scheduleId}/attractions/${attraction.id}/registrants`,
 				{},
 				{ headers: { "Idempotency-Key": idempotencyKey } }
 			);
+			idempotencyKey = crypto.randomUUID();
 			joinSuccess = true;
 			joinReason = undefined;
 			joined = true;
