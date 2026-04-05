@@ -21,21 +21,44 @@ public class CachedAttractionRepository(
     private static string IdKey(Guid attractionId) => $"attraction:id:{attractionId}";
     private static string ScheduleKey(Guid scheduleId) => $"schedule:attraction:{scheduleId}";
     private static string RemainingCapacityKey(Guid attractionId) => $"attraction:remaining:{attractionId}";
+    private const string CountKey = "attraction:count";
 
     public async Task<Attraction> Create(Attraction attraction)
     {
-        var result = await inner.Create(attraction);
-        await cache.KeyDeleteAsync(ScheduleKey(attraction.ScheduleId));
-        return result;
+        if (await cache.KeyExistsAsync(CountKey))
+            await cache.StringIncrementAsync(CountKey);
+        try
+        {
+            var result = await inner.Create(attraction);
+            await cache.KeyDeleteAsync(ScheduleKey(attraction.ScheduleId));
+            return result;
+        }
+        catch
+        {
+            if (await cache.KeyExistsAsync(CountKey))
+                await cache.StringDecrementAsync(CountKey);
+            throw;
+        }
     }
 
     public async Task<Attraction> Delete(Guid attractionId)
     {
-        var result = await inner.Delete(attractionId);
-        await cache.KeyDeleteAsync(IdKey(attractionId));
-        await cache.KeyDeleteAsync(RemainingCapacityKey(attractionId));
-        await cache.KeyDeleteAsync(ScheduleKey(result.ScheduleId));
-        return result;
+        if (await cache.KeyExistsAsync(CountKey))
+            await cache.StringDecrementAsync(CountKey);
+        try
+        {
+            var result = await inner.Delete(attractionId);
+            await cache.KeyDeleteAsync(IdKey(attractionId));
+            await cache.KeyDeleteAsync(RemainingCapacityKey(attractionId));
+            await cache.KeyDeleteAsync(ScheduleKey(result.ScheduleId));
+            return result;
+        }
+        catch
+        {
+            if (await cache.KeyExistsAsync(CountKey))
+                await cache.StringIncrementAsync(CountKey);
+            throw;
+        }
     }
 
     public async Task<Attraction> Update(Attraction attraction)
@@ -125,6 +148,20 @@ public class CachedAttractionRepository(
 
         var result = await inner.GetRemainingCapacity(attractionId);
         await cache.StringSetAsync(key, result, Ttl);
+        return result;
+    }
+
+    public async Task<int> CountAsync()
+    {
+        var cached = await cache.StringGetAsync(CountKey);
+        if (cached.HasValue && int.TryParse(cached, out var count))
+        {
+            await cache.KeyExpireAsync(CountKey, Ttl);
+            return count;
+        }
+
+        var result = await inner.CountAsync();
+        await cache.StringSetAsync(CountKey, result, Ttl);
         return result;
     }
 

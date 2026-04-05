@@ -26,17 +26,16 @@ public static class ScheduleSeeder
                         DateTimeKind.Utc
                     );
 
-                    return new Schedule
-                    {
-                        Name = f.Commerce.ProductName(),
-                        Description = f.Lorem.Sentence(),
-                        Location = $"{f.Address.City()}, {f.Address.Country()}",
-                        StartTime = startTime,
-                        EndTime = endTime,
-                    };
+                    return Schedule.Create(
+                        f.Commerce.ProductName(),
+                        f.Lorem.Sentence(),
+                        $"{f.Address.City()}, {f.Address.Country()}",
+                        startTime,
+                        endTime);
                 });
 
             var schedules = faker.Generate(ScheduleCount);
+            schedules.ForEach(s => s.ClearDomainEvents());
 
             context.Schedules.AddRange(schedules);
             await context.SaveChangesAsync();

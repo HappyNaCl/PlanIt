@@ -50,4 +50,6 @@ public class UserRepository(IApplicationDbContext context) : IUserRepository
 
         return user;
     }
+
+    public Task<int> CountAsync() => context.Users.CountAsync();
 }

@@ -18,9 +18,9 @@
 	}
 
 	const navLinks = [
-		{ adminOnly: true, label: "Dashboard", href: "/dashboard", icon: LayoutDashboardIcon },
-		{ adminOnly: false, label: "Schedules", href: "/", icon: CalendarDays },
-		{ adminOnly: false, label: "My Plans", href: "/plans", icon: BookMarked }
+		{ adminOnly: true, label: 'Dashboard', href: '/dashboard' as const, icon: LayoutDashboardIcon },
+		{ adminOnly: false, label: 'Schedules', href: '/' as const, icon: CalendarDays },
+		{ adminOnly: false, label: 'My Plans', href: '/plans' as const, icon: BookMarked }
 	];
 </script>
 
@@ -71,7 +71,7 @@
 				{@const canShow = !link.adminOnly || auth.user?.role === 'ADMIN'}
 				{#if canShow}
 					<a
-						href={resolve(link.href)}
+						href={link.href}
 						class="flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors {active
 							? 'border-blue-400 text-blue-400'
 							: 'border-transparent text-white/40 hover:text-white/70'}"

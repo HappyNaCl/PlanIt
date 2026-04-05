@@ -16,15 +16,22 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
     };    
 
     private static string RedisKey(Guid id) => $"user:id:{id}";
+    private const string CountKey = "user:count";
     
     public async Task<User> Create(User user)
     {
-        var savedUser = await inner.Create(user);
-        
-        var cacheKey = RedisKey(savedUser.Id);
-        await cache.SetStringAsync(cacheKey, JsonSerializer.Serialize(user, _json), _options);
-        
-        return savedUser;
+        await AdjustCountAsync(1);
+        try
+        {
+            var savedUser = await inner.Create(user);
+            await cache.SetStringAsync(RedisKey(savedUser.Id), JsonSerializer.Serialize(savedUser, _json), _options);
+            return savedUser;
+        }
+        catch
+        {
+            await AdjustCountAsync(-1);
+            throw;
+        }
     }
 
     public async Task<User> GetById(Guid id)
@@ -43,5 +50,23 @@ public class CachedUserRepository(IUserRepository inner, IDistributedCache cache
     public async Task<User?> GetByUsernameDefault(string username)
     {
         return await inner.GetByUsernameDefault(username);
+    }
+
+    public async Task<int> CountAsync()
+    {
+        var cached = await cache.GetStringAsync(CountKey);
+        if (cached != null && int.TryParse(cached, out var count))
+            return count;
+
+        var result = await inner.CountAsync();
+        await cache.SetStringAsync(CountKey, result.ToString(), _options);
+        return result;
+    }
+
+    private async Task AdjustCountAsync(int delta)
+    {
+        var cached = await cache.GetStringAsync(CountKey);
+        if (cached != null && int.TryParse(cached, out var count))
+            await cache.SetStringAsync(CountKey, (count + delta).ToString(), _options);
     }
 }

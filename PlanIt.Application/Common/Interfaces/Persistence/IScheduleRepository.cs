@@ -12,4 +12,5 @@ public interface IScheduleRepository
     public Task<List<Schedule>> GetByDate(DateOnly date);
     public Task<List<(Schedule Schedule, int AttractionCount)>> GetByDateRange(DateTime startUtc, DateTime endUtc);
     public Task<List<Schedule>> GetByIds(List<Guid> ids);
+    public Task<int> CountAsync();
 }

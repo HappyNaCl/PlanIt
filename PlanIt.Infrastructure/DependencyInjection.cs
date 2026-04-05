@@ -93,6 +93,7 @@ public static class DependencyInjection
         });
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
         services.AddSingleton<IAttractionNotifier, AttractionNotifier>();
+        services.AddSingleton<IAdminNotifier, AdminNotifier>();
         services.AddHostedService<JoinAttractionConsumer>();
 
         services.AddScoped<IPasswordHasher, BCryptPasswordHasher>();

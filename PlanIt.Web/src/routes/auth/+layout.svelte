@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import type { Snippet } from 'svelte';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import { browser } from '$app/environment';
-	import { isAuthenticated, isInitialized } from '$lib/stores/auth.svelte';
+	import { onMount } from "svelte";
+	import type { Snippet } from "svelte";
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+	import { browser } from "$app/environment";
+	import { isAdmin, isAuthenticated, isInitialized } from "$lib/stores/auth.svelte";
 
 	let { children }: { children: Snippet } = $props();
 
 	$effect(() => {
 		if (browser && isInitialized() && isAuthenticated()) {
-			goto(resolve('/'));
+			goto(resolve(isAdmin() ? "/dashboard" : "/"));
 		}
 	});
 

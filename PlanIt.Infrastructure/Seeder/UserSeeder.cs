@@ -17,13 +17,8 @@ public static class UserSeeder
         {
             var hasher = new BCryptPasswordHasher();
 
-            var adminUser = new User
-            {
-                Username = "admin",
-                Email = "admin@gmail.com",
-                Password = hasher.Hash("adminadmin"),
-                Role = UserRole.ADMIN
-            };
+            var adminUser = User.Create("admin", "admin@gmail.com", hasher.Hash("adminadmin"), UserRole.ADMIN);
+            adminUser.ClearDomainEvents();
 
             context.Users.Add(adminUser);
             await context.SaveChangesAsync();
@@ -35,15 +30,10 @@ public static class UserSeeder
             var hashedPassword = hasher.Hash("useruser");
 
             var faker = new Faker<User>()
-                .CustomInstantiator(f => new User
-                {
-                    Username = f.Internet.UserName(),
-                    Email = f.Internet.Email(),
-                    Password = hashedPassword,
-                    Role = UserRole.USER
-                });
+                .CustomInstantiator(f => User.Create(f.Internet.UserName(), f.Internet.Email(), hashedPassword));
 
             var users = faker.Generate(UserCount);
+            users.ForEach(u => u.ClearDomainEvents());
 
             context.Users.AddRange(users);
             await context.SaveChangesAsync();

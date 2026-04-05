@@ -11,4 +11,5 @@ public interface IAttractionRepository
     public Task<List<Attraction>> GetByScheduleId(Guid scheduleId);
     public Task<Attraction> GetByIdForUpdate(Guid attractionId);
     public Task<int> GetRemainingCapacity(Guid attractionId);
+    public Task<int> CountAsync();
 }

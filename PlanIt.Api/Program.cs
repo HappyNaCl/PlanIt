@@ -34,5 +34,6 @@ var app = builder.Build();
     app.UseHttpsRedirection();
     app.MapControllers();
     app.MapHub<AttractionHub>("/hubs/attractions");
+    app.MapHub<AdminHub>("/hubs/admin");
     app.Run();
 }

@@ -8,7 +8,7 @@ using PlanIt.Domain.Entities;
 
 namespace PlanIt.Infrastructure.Persistence;
 
-public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMediator? mediator = null) :
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IMediator mediator) :
     DbContext(options), IApplicationDbContext
 {
     private readonly IMediator? _mediator = mediator;
@@ -109,25 +109,24 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         ConvertHardDeletesToSoftDeletes();
         UpdateTimestamps();
         
-        // var domainEntities = ChangeTracker
-        //     .Entries<Entity<Guid>>()
-        //     .Where(x => x.Entity.DomainEvents.Any())
-        //     .ToList();
-        //
-        // var domainEvents = domainEntities
-        //     .SelectMany(x => x.Entity.DomainEvents)
-        //     .ToList();
-        //
-        // var result = await base.SaveChangesAsync(cancellationToken);
-        //
-        // foreach (var domainEvent in domainEvents)
-        //     await _mediator.Publish(domainEvent, cancellationToken);
-        //
-        // domainEntities.ForEach(e => e.Entity.ClearDomainEvents());
-        //
-        // return result;
-        
-        return await base.SaveChangesAsync(cancellationToken);
+        var domainEntities = ChangeTracker
+            .Entries<Entity<Guid>>()
+            .Where(x => x.Entity.DomainEvents.Any())
+            .ToList();
+
+        var domainEvents = domainEntities
+            .SelectMany(x => x.Entity.DomainEvents)
+            .ToList();
+
+        var result = await base.SaveChangesAsync(cancellationToken);
+
+        if (_mediator is not null)
+            foreach (var domainEvent in domainEvents)
+                await _mediator.Publish(domainEvent, cancellationToken);
+
+        domainEntities.ForEach(e => e.Entity.ClearDomainEvents());
+
+        return result;
     }
 
     private void UpdateTimestamps()
@@ -161,7 +160,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         var deletedEntries = ChangeTracker
             .Entries<ISoftDeletable>()
-            .Where(e => e.State == EntityState.Deleted);
+            .Where(e => e.State == EntityState.Deleted && e.Entity is not Registrant);
 
         foreach (var entry in deletedEntries)
         {

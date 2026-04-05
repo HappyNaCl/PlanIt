@@ -51,11 +51,11 @@ public class JoinAttractionConsumer(
     private async Task HandleAsync(JoinAttractionMessage message)
     {
         using var scope = scopeFactory.CreateScope();
-        var attractionRepo = scope.ServiceProvider.GetRequiredService<IAttractionRepository>();
-        var registrantRepo = scope.ServiceProvider.GetRequiredService<IRegistrantRepository>();
+        var attractionRepository = scope.ServiceProvider.GetRequiredService<IAttractionRepository>();
+        var registrantRepository = scope.ServiceProvider.GetRequiredService<IRegistrantRepository>();
         var fileUploader = scope.ServiceProvider.GetRequiredService<IFileUploader>();
 
-        var remaining = await attractionRepo.GetRemainingCapacity(message.AttractionId);
+        var remaining = await attractionRepository.GetRemainingCapacity(message.AttractionId);
         if (remaining <= 0)
         {
             await notifier.SendRegistrationFailed(message.UserId.ToString(), "This attraction is full.");
@@ -65,11 +65,7 @@ public class JoinAttractionConsumer(
         try
         {
             Console.WriteLine($"[JoinAttractionConsumer]: {message.UserId} JOINING {message.AttractionId}");
-            await registrantRepo.AddAsync(new Registrant
-            {
-                UserId = message.UserId,
-                AttractionId = message.AttractionId
-            });
+            await registrantRepository.AddAsync(Registrant.Create(message.UserId, message.AttractionId));
         }
         catch (AlreadyRegisteredException)
         {
@@ -77,8 +73,8 @@ public class JoinAttractionConsumer(
             Console.WriteLine($"[JoinAttractionConsumer]: IDEMPOTENT {message.UserId} JOINING {message.AttractionId}");
         }
 
-        var attraction = await attractionRepo.GetById(message.AttractionId);
-        var updatedRemaining = await attractionRepo.GetRemainingCapacity(message.AttractionId);
+        var attraction = await attractionRepository.GetById(message.AttractionId);
+        var updatedRemaining = await attractionRepository.GetRemainingCapacity(message.AttractionId);
 
         var result = new AttractionResult(
             attraction.Id,
@@ -98,5 +94,6 @@ public class JoinAttractionConsumer(
         _channel?.CloseAsync().GetAwaiter().GetResult();
         _channel?.Dispose();
         base.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

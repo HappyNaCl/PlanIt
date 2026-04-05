@@ -1,4 +1,4 @@
-import type { User } from '$lib/types/models/user';
+import type { User } from "$lib/types/models/user";
 
 interface AuthState {
 	accessToken: string | null;
@@ -39,4 +39,8 @@ export function isInitialized() {
 
 export function isAuthenticated() {
 	return auth.accessToken !== null;
+}
+
+export function isAdmin() {
+	return auth.user?.role === "ADMIN";
 }

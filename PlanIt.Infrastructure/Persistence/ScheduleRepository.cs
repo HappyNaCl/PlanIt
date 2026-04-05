@@ -26,7 +26,7 @@ public class ScheduleRepository(IApplicationDbContext context) : IScheduleReposi
         var schedule = await context.Schedules
             .FirstOrDefaultAsync(s => s.Id == scheduleId)
             ?? throw new ScheduleNotFoundException(scheduleId);
-
+        
         context.Schedules.Remove(schedule);
         await context.SaveChangesAsync(CancellationToken.None);
         return schedule;
@@ -77,4 +77,6 @@ public class ScheduleRepository(IApplicationDbContext context) : IScheduleReposi
             .Where(s => ids.Contains(s.Id))
             .ToListAsync();
     }
+
+    public Task<int> CountAsync() => context.Schedules.CountAsync();
 }

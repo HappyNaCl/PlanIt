@@ -13,38 +13,61 @@ public class CachedRegistrantRepository(
 
     private static string RemainingCapacityKey(Guid attractionId) => $"attraction:remaining:{attractionId}";
     private static string UserRegistrationsKey(Guid userId) => $"user:registrations:{userId}";
+    private const string CountKey = "registrant:count";
 
     public async Task<Registrant> AddAsync(Registrant registrant)
     {
-        var result = await inner.AddAsync(registrant);
-
-        var remainingKey = RemainingCapacityKey(registrant.AttractionId);
-        if (await cache.KeyExistsAsync(remainingKey))
-            await cache.StringDecrementAsync(remainingKey);
-
-        var userKey = UserRegistrationsKey(registrant.UserId);
-        if (await cache.KeyExistsAsync(userKey))
+        if (await cache.KeyExistsAsync(CountKey))
+            await cache.StringIncrementAsync(CountKey);
+        try
         {
-            await cache.SetAddAsync(userKey, registrant.AttractionId.ToString());
-            await cache.KeyExpireAsync(userKey, Ttl);
-        }
+            var result = await inner.AddAsync(registrant);
 
-        return result;
+            var remainingKey = RemainingCapacityKey(registrant.AttractionId);
+            if (await cache.KeyExistsAsync(remainingKey))
+                await cache.StringDecrementAsync(remainingKey);
+
+            var userKey = UserRegistrationsKey(registrant.UserId);
+            if (await cache.KeyExistsAsync(userKey))
+            {
+                await cache.SetAddAsync(userKey, registrant.AttractionId.ToString());
+                await cache.KeyExpireAsync(userKey, Ttl);
+            }
+
+            return result;
+        }
+        catch
+        {
+            if (await cache.KeyExistsAsync(CountKey))
+                await cache.StringDecrementAsync(CountKey);
+            throw;
+        }
     }
 
     public async Task RemoveAsync(Guid userId, Guid attractionId)
     {
-        await inner.RemoveAsync(userId, attractionId);
-
-        var remainingKey = RemainingCapacityKey(attractionId);
-        if (await cache.KeyExistsAsync(remainingKey))
-            await cache.StringIncrementAsync(remainingKey);
-
-        var userKey = UserRegistrationsKey(userId);
-        if (await cache.KeyExistsAsync(userKey))
+        if (await cache.KeyExistsAsync(CountKey))
+            await cache.StringDecrementAsync(CountKey);
+        try
         {
-            await cache.SetRemoveAsync(userKey, attractionId.ToString());
-            await cache.KeyExpireAsync(userKey, Ttl);
+            await inner.RemoveAsync(userId, attractionId);
+
+            var remainingKey = RemainingCapacityKey(attractionId);
+            if (await cache.KeyExistsAsync(remainingKey))
+                await cache.StringIncrementAsync(remainingKey);
+
+            var userKey = UserRegistrationsKey(userId);
+            if (await cache.KeyExistsAsync(userKey))
+            {
+                await cache.SetRemoveAsync(userKey, attractionId.ToString());
+                await cache.KeyExpireAsync(userKey, Ttl);
+            }
+        }
+        catch
+        {
+            if (await cache.KeyExistsAsync(CountKey))
+                await cache.StringIncrementAsync(CountKey);
+            throw;
         }
     }
 
@@ -68,5 +91,19 @@ public class CachedRegistrantRepository(
         }
 
         return ids;
+    }
+
+    public async Task<int> CountAsync()
+    {
+        var cached = await cache.StringGetAsync(CountKey);
+        if (cached.HasValue && int.TryParse(cached, out var count))
+        {
+            await cache.KeyExpireAsync(CountKey, Ttl);
+            return count;
+        }
+
+        var result = await inner.CountAsync();
+        await cache.StringSetAsync(CountKey, result, Ttl);
+        return result;
     }
 }

@@ -20,14 +20,7 @@ public class CreateAttractionCommandHandler(
             request.ImageFile.ContentType,
             "attraction");
 
-        var attraction = new Attraction
-        {
-            ScheduleId = request.ScheduleId,
-            Name = request.Name,
-            Description = request.Description,
-            ImageKey = imageKey,
-            Capacity = request.Capacity,
-        };
+        var attraction = Attraction.Create(request.Name, request.Description, imageKey, request.Capacity, request.ScheduleId);
 
         var saved = await attractionRepository.Create(attraction);
 

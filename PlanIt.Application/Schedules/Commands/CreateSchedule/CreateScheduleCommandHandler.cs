@@ -11,14 +11,7 @@ public class CreateScheduleCommandHandler(
 {
     public async Task<ScheduleResult> Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
     {
-        var newSchedule = new Schedule
-        {
-            Name = request.Name,
-            Description = request.Description,
-            Location = request.Location,
-            StartTime = request.StartTime.ToUniversalTime(),
-            EndTime = request.EndTime.ToUniversalTime(),
-        };
+        var newSchedule = Schedule.Create(request.Name, request.Description, request.Location, request.StartTime.ToUniversalTime(), request.EndTime.ToUniversalTime());
 
         var savedSchedule = await scheduleRepository.Create(newSchedule);
 

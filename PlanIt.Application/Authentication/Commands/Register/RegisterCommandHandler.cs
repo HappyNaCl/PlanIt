@@ -2,7 +2,6 @@ using MediatR;
 using PlanIt.Application.Authentication.Results;
 using PlanIt.Application.Common.Interfaces.Authentication;
 using PlanIt.Application.Common.Interfaces.Persistence;
-using PlanIt.Domain.Common.Enums;
 using PlanIt.Domain.Entities;
 
 namespace PlanIt.Application.Authentication.Commands.Register;
@@ -18,13 +17,7 @@ public class RegisterCommandHandler (
     {
         var hashedPassword = passwordHasher.Hash(request.Password);
 
-        var newUser = new User
-        {
-            Username = request.Username,
-            Email = request.Email,
-            Password = hashedPassword,
-            Role = UserRole.USER
-        };
+        var newUser = User.Create(request.Username, request.Email, hashedPassword);
 
         var savedUser = await userRepository.Create(newUser);
 

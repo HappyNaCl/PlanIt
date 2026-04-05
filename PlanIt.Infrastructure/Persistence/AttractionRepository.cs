@@ -71,4 +71,6 @@ public class AttractionRepository(
 
         return attraction.Capacity - attraction.RegistrantCount;
     }
+
+    public Task<int> CountAsync() => context.Attractions.CountAsync();
 }

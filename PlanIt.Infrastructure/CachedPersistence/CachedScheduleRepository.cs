@@ -18,15 +18,23 @@ public class CachedScheduleRepository(
     
     private static string IdKey(Guid id) => $"schedule:id:{id}";
     private static string DateKey(DateOnly date) => $"schedules:date:{date:yyyy-MM-dd}";
+    private const string CountKey = "schedule:count";
     
     public async Task<Schedule> Create(Schedule schedule)
     {
-        var savedSchedule = await inner.Create(schedule);
-
-        await cache.SetStringAsync(IdKey(savedSchedule.Id), JsonSerializer.Serialize(savedSchedule, _json), _options);
-        await cache.RemoveAsync(DateKey(DateOnly.FromDateTime(savedSchedule.StartTime)));
-
-        return savedSchedule;
+        await AdjustCountAsync(1);
+        try
+        {
+            var savedSchedule = await inner.Create(schedule);
+            await cache.SetStringAsync(IdKey(savedSchedule.Id), JsonSerializer.Serialize(savedSchedule, _json), _options);
+            await cache.RemoveAsync(DateKey(DateOnly.FromDateTime(savedSchedule.StartTime)));
+            return savedSchedule;
+        }
+        catch
+        {
+            await AdjustCountAsync(-1);
+            throw;
+        }
     }
 
     public async Task<Schedule> Update(Schedule schedule)
@@ -41,12 +49,19 @@ public class CachedScheduleRepository(
 
     public async Task<Schedule> Delete(Guid scheduleId)
     {
-        var deletedSchedule = await inner.Delete(scheduleId);
-
-        await cache.RemoveAsync(IdKey(scheduleId));
-        await cache.RemoveAsync(DateKey(DateOnly.FromDateTime(deletedSchedule.StartTime)));
-
-        return deletedSchedule;
+        await AdjustCountAsync(-1);
+        try
+        {
+            var deletedSchedule = await inner.Delete(scheduleId);
+            await cache.RemoveAsync(IdKey(scheduleId));
+            await cache.RemoveAsync(DateKey(DateOnly.FromDateTime(deletedSchedule.StartTime)));
+            return deletedSchedule;
+        }
+        catch
+        {
+            await AdjustCountAsync(1);
+            throw;
+        }
     }
 
     public async Task<Schedule> GetById(Guid scheduleId)
@@ -127,5 +142,23 @@ public class CachedScheduleRepository(
         }
 
         return ids.Where(cached.ContainsKey).Select(id => cached[id]).ToList();
+    }
+
+    public async Task<int> CountAsync()
+    {
+        var cached = await cache.GetStringAsync(CountKey);
+        if (cached != null && int.TryParse(cached, out var count))
+            return count;
+
+        var result = await inner.CountAsync();
+        await cache.SetStringAsync(CountKey, result.ToString(), _options);
+        return result;
+    }
+
+    private async Task AdjustCountAsync(int delta)
+    {
+        var cached = await cache.GetStringAsync(CountKey);
+        if (cached != null && int.TryParse(cached, out var count))
+            await cache.SetStringAsync(CountKey, (count + delta).ToString(), _options);
     }
 }

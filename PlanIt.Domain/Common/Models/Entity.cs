@@ -1,3 +1,4 @@
+using PlanIt.Domain.Common.DomainEvents;
 using PlanIt.Domain.Common.Interfaces;
 
 namespace PlanIt.Domain.Common.Models;
@@ -10,8 +11,12 @@ public abstract class Entity<TId>(TId id) : IEquatable<Entity<TId>>, ISoftDeleta
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; private set; }
-
-    public void Delete()
+    private readonly List<IDomainEvent> _domainEvents = [];
+    public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    protected void AddDomainEvent(IDomainEvent eventItem) => _domainEvents.Add(eventItem);
+    public void ClearDomainEvents() => _domainEvents.Clear();
+    
+    public virtual void Delete()
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
