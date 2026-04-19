@@ -134,7 +134,7 @@ Three layers work together to ensure the fastest submission wins:
 `JoinAttractionConsumer` re-reads capacity from the source of truth (database, bypassing cache) before creating the `Registrant` row. This is the point where simultaneous requests that passed the pre-check are resolved: the first one to be dequeued writes the row, the rest see capacity = 0 and receive `RegistrationFailed`.
 
 **Layer 3 — Database unique constraint**
-The `Registrant` table has a unique index on `(UserId, AttractionId)`. Even if two consumer goroutines somehow raced to the insert, the database rejects the second with a constraint violation, caught and converted to `AlreadyRegisteredException`.
+The `Registrant` table has a unique index on `(UserId, AttractionId)`. Even if two consumer somehow raced to the insert, the database rejects the second with a constraint violation, caught and converted to `AlreadyRegisteredException`.
 
 RabbitMQ with prefetch = 1 means the consumer processes one registration at a time, making the ordering deterministic: whichever message arrived in the queue first is processed first.
 
